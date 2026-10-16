@@ -8,7 +8,7 @@ import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
 import { getPlantStatus, usePlants } from '@/context/plants';
-import { Spacing } from '@/constants/theme';
+import { CardRadius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 export default function PlantDetailsScreen() {
@@ -120,7 +120,7 @@ function Info({ label, value }: { label: string; value: string }) {
 
 const styles = StyleSheet.create({
   header: { gap: Spacing.two, marginBottom: Spacing.four },
-  card: { padding: Spacing.four, borderRadius: Spacing.four, gap: Spacing.three },
+  card: { padding: Spacing.four, borderRadius: CardRadius, gap: Spacing.three },
   heroImage: { width: '100%', height: 220, borderRadius: Spacing.three },
   info: { gap: Spacing.one },
   careActions: { gap: Spacing.two, marginTop: Spacing.one },

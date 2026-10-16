@@ -2,6 +2,7 @@ import { useState, type ComponentProps } from 'react';
 import { Image, Modal, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { SymbolView } from 'expo-symbols';
 import { router } from 'expo-router';
+import { Grid2X2, List, Search, SlidersHorizontal } from 'lucide-react-native';
 
 import { StatusChip } from '@/components/status-chip';
 import { ThemedText } from '@/components/themed-text';
@@ -9,7 +10,7 @@ import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
 import { usePlants, type Plant } from '@/context/plants';
-import { Spacing } from '@/constants/theme';
+import { CardRadius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 export default function PlantsScreen() {
@@ -18,6 +19,7 @@ export default function PlantsScreen() {
   const [editingId, setEditingId] = useState<string>();
   const [deletingId, setDeletingId] = useState<string>();
   const [query, setQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [filter, setFilter] = useState<'All' | 'Healthy' | 'Needs Attention' | 'Overdue'>('All');
   const editingPlant = plants.find((plant) => plant.id === editingId);
   const deletingPlant = plants.find((plant) => plant.id === deletingId);
@@ -31,35 +33,58 @@ export default function PlantsScreen() {
   return (
     <Screen scroll tabBarInset>
       <View style={styles.header}>
-        <ThemedText type="subtitle">My Plants</ThemedText>
-        <ThemedText type="default" themeColor="textSecondary">
-          {plants.length} plant{plants.length !== 1 ? 's' : ''} in your garden
-        </ThemedText>
-        <TextInput
-          value={query}
-          onChangeText={setQuery}
-          placeholder="Search plants"
-          placeholderTextColor={theme.textSecondary}
-          style={[styles.searchInput, { color: theme.text, borderColor: theme.border }]}
-        />
-        <View style={styles.filters}>
-          {(['All', 'Healthy', 'Needs Attention', 'Overdue'] as const).map((item) => (
-            <Pressable
-              key={item}
-              onPress={() => setFilter(item)}
-              style={[
-                styles.filter,
-                { backgroundColor: filter === item ? theme.primary : theme.backgroundElement },
-              ]}>
-              <ThemedText type="small" style={{ color: filter === item ? theme.onPrimary : theme.textSecondary }}>
-                {item === 'Needs Attention' ? 'Needs Care' : item}
-              </ThemedText>
+        <View style={styles.titleRow}>
+          <View>
+            <ThemedText style={styles.title}>My plants</ThemedText>
+            <ThemedText style={styles.subtitle} themeColor="textSecondary">
+              {plants.length} plant{plants.length !== 1 ? 's' : ''} in your garden
+            </ThemedText>
+          </View>
+          <View style={[styles.countBadge, { backgroundColor: `${theme.primary}18` }]}>
+            <ThemedText style={[styles.countText, { color: theme.primary }]}>{plants.length}</ThemedText>
+          </View>
+        </View>
+        <View style={[styles.searchBar, { backgroundColor: '#FFFFFF', borderColor: theme.border }]}>
+          <Search size={19} color={theme.textSecondary} strokeWidth={1.8} />
+          <TextInput
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Search your plants"
+            placeholderTextColor={theme.textSecondary}
+            style={[styles.searchInput, { color: theme.text }]}
+          />
+          <Pressable accessibilityLabel="Filter plants" style={styles.searchAction}>
+            <SlidersHorizontal size={18} color={theme.primary} strokeWidth={1.8} />
+          </Pressable>
+        </View>
+        <View style={styles.toolbar}>
+          <View style={styles.filters}>
+            {(['All', 'Healthy', 'Needs Attention', 'Overdue'] as const).map((item) => (
+              <Pressable
+                key={item}
+                onPress={() => setFilter(item)}
+                style={[
+                  styles.filter,
+                  { backgroundColor: filter === item ? theme.primary : '#FFFFFF' },
+                ]}>
+                <ThemedText type="small" style={{ color: filter === item ? theme.onPrimary : theme.textSecondary }}>
+                  {item === 'Needs Attention' ? 'Needs care' : item}
+                </ThemedText>
+              </Pressable>
+            ))}
+          </View>
+          <View style={styles.viewToggle}>
+            <Pressable onPress={() => setViewMode('grid')} accessibilityLabel="Grid view" style={[styles.viewButton, viewMode === 'grid' && { backgroundColor: theme.primary }]}>
+              <Grid2X2 size={17} color={viewMode === 'grid' ? theme.onPrimary : theme.textSecondary} />
             </Pressable>
-          ))}
+            <Pressable onPress={() => setViewMode('list')} accessibilityLabel="List view" style={[styles.viewButton, viewMode === 'list' && { backgroundColor: theme.primary }]}>
+              <List size={18} color={viewMode === 'list' ? theme.onPrimary : theme.textSecondary} />
+            </Pressable>
+          </View>
         </View>
       </View>
 
-      <View style={styles.list}>
+      <View style={[styles.list, viewMode === 'grid' && styles.grid]}>
         {filteredPlants.length === 0 ? (
           <Empty />
         ) : (
@@ -69,10 +94,16 @@ export default function PlantsScreen() {
               onPress={() =>
                 router.push({ pathname: '/plant/[id]', params: { id: plant.id } })
               }
-              style={styles.cardPressable}>
-              <ThemedView type="backgroundElement" style={styles.card}>
-                <View style={styles.cardTop}>
-                  <View style={[styles.thumbnail, { backgroundColor: `${theme.primary}18` }]}>
+              style={[styles.cardPressable, viewMode === 'grid' && styles.gridCardPressable]}>
+              <ThemedView
+                type="backgroundElement"
+                style={[styles.card, viewMode === 'grid' && styles.gridCard]}>
+                <View style={[styles.cardTop, viewMode === 'grid' && styles.gridCardTop]}>
+                  <View style={[
+                    styles.thumbnail,
+                    viewMode === 'grid' && styles.gridThumbnail,
+                    { backgroundColor: `${theme.primary}18` },
+                  ]}>
                     {plant.image ? (
                       <Image
                         source={{ uri: plant.image }}
@@ -87,15 +118,17 @@ export default function PlantsScreen() {
                       />
                     )}
                   </View>
-                  <View style={styles.cardText}>
-                    <ThemedText type="smallBold">{plant.name}</ThemedText>
-                    <ThemedText type="small" themeColor="textSecondary">
-                      {plant.type} · {plant.wateringFrequency} days watering cycle
-                    </ThemedText>
+                  <View style={[styles.cardText, viewMode === 'grid' && styles.gridCardText]}>
+                    <ThemedText type="smallBold" numberOfLines={1}>{plant.name}</ThemedText>
+                    {viewMode === 'list' ? (
+                      <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
+                        {plant.type} · Every {plant.wateringFrequency} days
+                      </ThemedText>
+                    ) : null}
                   </View>
-                  <View style={styles.cardTopRight}>
-                    <StatusChip status={plant.status} />
-                    <View style={styles.actions}>
+                  <View style={[styles.cardTopRight, viewMode === 'grid' && styles.gridCardTopRight]}>
+                    {viewMode === 'list' ? <StatusChip status={plant.status} /> : null}
+                    <View style={[styles.actions, viewMode === 'grid' && styles.gridActions]}>
                       <Pressable
                         accessibilityLabel={`Edit ${plant.name}`}
                         onPress={(event) => {
@@ -125,16 +158,15 @@ export default function PlantsScreen() {
                     </View>
                   </View>
                 </View>
-                <View style={styles.cardBottom}>
-                  <View style={styles.cardDetails}>
-                    <ThemedText type="small" themeColor="textSecondary">
-                      Last watered {plant.lastWatered}
-                    </ThemedText>
-                    <ThemedText type="smallBold" themeColor="textSecondary">
-                      Added {new Date(plant.createdAt).toLocaleDateString()}
-                    </ThemedText>
+                {viewMode === 'list' ? (
+                  <View style={styles.cardBottom}>
+                    <View style={styles.cardDetails}>
+                      <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
+                        Last watered {plant.lastWatered}
+                      </ThemedText>
+                    </View>
                   </View>
-                </View>
+                ) : null}
               </ThemedView>
             </Pressable>
           ))
@@ -316,14 +348,46 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     marginBottom: Spacing.four,
   },
-  searchInput: {
-    minHeight: 46,
-    borderWidth: 1,
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.two,
-    fontSize: 16,
-    marginTop: Spacing.one,
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
+  title: {
+    fontSize: 30,
+    lineHeight: 36,
+    fontWeight: '800',
+  },
+  subtitle: {
+    marginTop: 3,
+  },
+  countBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  countText: {
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  searchBar: {
+    minHeight: 50,
+    borderWidth: 1,
+    borderRadius: CardRadius,
+    paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 9,
+  },
+  searchInput: {
+    flex: 1,
+    minHeight: 46,
+    fontSize: 14,
+  },
+  searchAction: { padding: 5 },
+  toolbar: { gap: Spacing.two },
   filters: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -333,17 +397,46 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.two,
     paddingVertical: Spacing.one,
     borderRadius: Spacing.four,
+    borderWidth: 1,
+    borderColor: '#E1E5E2',
+  },
+  viewToggle: {
+    alignSelf: 'flex-end',
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 3,
+    gap: 2,
+  },
+  viewButton: {
+    width: 34,
+    height: 32,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   list: {
     gap: Spacing.two,
   },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
   card: {
     padding: Spacing.three,
-    borderRadius: Spacing.three,
+    borderRadius: CardRadius,
     gap: Spacing.two,
+  },
+  gridCard: {
+    padding: 10,
+    gap: 9,
   },
   cardPressable: {
     width: '100%',
+  },
+  gridCardPressable: {
+    width: '48.5%',
   },
   cardTop: {
     flexDirection: 'row',
@@ -351,8 +444,17 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
+  gridCardTop: {
+    flexDirection: 'column',
+    justifyContent: 'flex-start',
+  },
+  gridCardText: {
+    width: '100%',
+    paddingTop: 0,
+  },
   cardText: {
     flex: 1,
+    minWidth: 0,
     gap: 2,
     paddingTop: Spacing.one,
   },
@@ -368,9 +470,20 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  gridThumbnail: {
+    width: '100%',
+    height: 118,
+    borderRadius: 15,
+  },
   cardTopRight: {
     alignItems: 'flex-end',
     gap: Spacing.two,
+  },
+  gridCardTopRight: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
   },
   cardBottom: {
     gap: Spacing.two,
@@ -384,6 +497,9 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     gap: Spacing.two,
+  },
+  gridActions: {
+    gap: 6,
   },
   iconButton: {
     width: 38,
@@ -402,7 +518,7 @@ const styles = StyleSheet.create({
   modalCard: {
     width: '100%',
     maxWidth: 520,
-    borderRadius: Spacing.four,
+    borderRadius: CardRadius,
     padding: Spacing.four,
     gap: Spacing.two,
   },
@@ -437,10 +553,18 @@ const styles = StyleSheet.create({
     minHeight: 44,
     paddingHorizontal: Spacing.two,
   },
+  gridCardBottom: {
+    marginTop: 0,
+  },
+  gridCardDetails: {
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: 2,
+  },
   confirmCard: {
     width: '100%',
     maxWidth: 420,
-    borderRadius: Spacing.four,
+    borderRadius: CardRadius,
     padding: Spacing.four,
     alignItems: 'center',
   },
@@ -463,7 +587,7 @@ const styles = StyleSheet.create({
   },
   empty: {
     padding: Spacing.three,
-    borderRadius: Spacing.three,
+    borderRadius: CardRadius,
     alignItems: 'center',
   },
 });

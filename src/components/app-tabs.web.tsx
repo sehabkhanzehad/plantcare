@@ -8,11 +8,9 @@ import {
 } from 'expo-router/ui';
 import { Pressable, View, StyleSheet } from 'react-native';
 
-import { SymbolView } from 'expo-symbols';
-import { ThemedText } from './themed-text';
-import { ThemedView } from './themed-view';
+import { CalendarDays, House, Leaf, Plus, UserRound, type LucideIcon } from 'lucide-react-native';
 
-import { Colors, MaxContentWidth, Spacing } from '@/constants/theme';
+import { CardRadius, Colors, MaxContentWidth } from '@/constants/theme';
 
 export default function AppTabs() {
   return (
@@ -21,19 +19,19 @@ export default function AppTabs() {
       <TabList asChild>
         <CustomTabList>
           <TabTrigger name="dashboard" href="/" asChild>
-            <TabButton iconName="house.fill">Dashboard</TabButton>
+            <TabButton icon={House} label="Dashboard" />
           </TabTrigger>
           <TabTrigger name="plants" href="/plants" asChild>
-            <TabButton iconName="leaf.fill">Plants</TabButton>
+            <TabButton icon={Leaf} label="Plants" />
           </TabTrigger>
           <TabTrigger name="add-plant" href="/add-plant" asChild>
-            <TabButton iconName="plus.circle.fill">Add Plant</TabButton>
+            <TabButton icon={Plus} label="Add plant" featured />
           </TabTrigger>
-          <TabTrigger name="notifications" href="/notifications" asChild>
-            <TabButton iconName="bell.fill">Alerts</TabButton>
+          <TabTrigger name="calendar" href="/calendar" asChild>
+            <TabButton icon={CalendarDays} label="Calendar" />
           </TabTrigger>
           <TabTrigger name="profile" href="/profile" asChild>
-            <TabButton iconName="person.fill">Profile</TabButton>
+            <TabButton icon={UserRound} label="Profile" />
           </TabTrigger>
         </CustomTabList>
       </TabList>
@@ -42,42 +40,45 @@ export default function AppTabs() {
 }
 
 export function TabButton({
-  children,
-  iconName,
+  icon: Icon,
+  label,
+  featured = false,
   isFocused,
   ...props
-}: TabTriggerSlotProps & { iconName: string }) {
+}: TabTriggerSlotProps & {
+  icon: LucideIcon;
+  label: string;
+  featured?: boolean;
+}) {
   const colors = Colors.light;
 
   return (
-    <Pressable {...props} style={styles.tabButtonView}>
-      <ThemedView
-        type={isFocused ? 'backgroundSelected' : 'backgroundElement'}
-        style={styles.tabButtonFill}>
-        <SymbolView
-          name={iconName as any}
-          size={16}
-          tintColor={isFocused ? colors.primary : colors.textSecondary}
+    <Pressable
+      {...props}
+      accessibilityLabel={label}
+      style={[styles.tabButton, featured && styles.featuredButton]}>
+      <View
+        style={[
+          featured ? styles.featuredIcon : styles.iconWrap,
+          featured && { backgroundColor: colors.text },
+        ]}>
+        <Icon
+          size={featured ? 20 : 21}
+          color={featured ? '#CFF27E' : isFocused ? colors.primary : colors.textSecondary}
+          strokeWidth={1.8}
         />
-        <ThemedText type="small" themeColor={isFocused ? 'primary' : 'textSecondary'}>
-          {children}
-        </ThemedText>
-      </ThemedView>
+      </View>
+      {isFocused && !featured ? (
+        <View style={[styles.activeDot, { backgroundColor: colors.primary }]} />
+      ) : null}
     </Pressable>
   );
 }
 
 export function CustomTabList(props: TabListProps) {
-  const colors = Colors.light;
-
   return (
     <View {...props} style={styles.tabListContainer}>
-      <ThemedView type="backgroundElement" style={styles.innerContainer}>
-        <ThemedText type="smallBold" style={[styles.brandText, { color: colors.primary }]}>
-          PlantCare
-        </ThemedText>
-        {props.children}
-      </ThemedView>
+      <View style={styles.innerContainer}>{props.children}</View>
     </View>
   );
 }
@@ -86,39 +87,59 @@ const styles = StyleSheet.create({
   tabListContainer: {
     position: 'absolute',
     width: '100%',
-    padding: Spacing.three,
+    bottom: 18,
+    paddingHorizontal: 20,
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',
   },
   innerContainer: {
-    paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.five,
-    borderRadius: Spacing.five,
+    height: 64,
+    paddingHorizontal: 12,
+    borderRadius: CardRadius,
+    backgroundColor: '#FFFFFF',
     flexDirection: 'row',
     alignItems: 'center',
-    flexGrow: 1,
-    gap: Spacing.two,
+    justifyContent: 'space-around',
+    width: '100%',
     maxWidth: MaxContentWidth,
+    shadowColor: '#0E1D15',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
+    elevation: 8,
   },
-  brandText: {
-    marginRight: 'auto',
-  },
-  tabButtonView: {
-    paddingVertical: Spacing.one,
-    paddingHorizontal: Spacing.three,
-    borderRadius: Spacing.three,
+  tabButton: {
+    width: 48,
+    height: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: 'transparent',
     outlineWidth: 0,
     outlineColor: 'transparent',
   },
-  tabButtonFill: {
-    paddingVertical: Spacing.one,
-    paddingHorizontal: Spacing.three,
-    borderRadius: Spacing.three,
+  iconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     alignItems: 'center',
     justifyContent: 'center',
-    flexDirection: 'row',
-    gap: Spacing.one,
+  },
+  featuredButton: {
+    marginTop: -22,
+  },
+  featuredIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activeDot: {
+    position: 'absolute',
+    bottom: 10,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
   },
 });

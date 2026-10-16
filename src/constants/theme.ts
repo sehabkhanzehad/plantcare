@@ -10,7 +10,7 @@ import { Platform } from 'react-native';
 export const Colors = {
   light: {
     text: '#14261A',
-    background: '#FFFFFF',
+    background: '#F3F5F1',
     backgroundElement: 'transparent',
     backgroundSelected: 'transparent',
     textSecondary: '#66706A',
@@ -77,5 +77,6 @@ export const Spacing = {
   six: 64,
 } as const;
 
+export const CardRadius = 20;
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
 export const MaxContentWidth = 800;

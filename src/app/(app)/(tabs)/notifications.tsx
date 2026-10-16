@@ -6,7 +6,7 @@ import { useNotifications } from '@/context/notifications';
 import { Screen } from '@/components/ui/screen';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
+import { CardRadius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 export default function NotificationsScreen() {
@@ -81,12 +81,12 @@ const styles = StyleSheet.create({
   headerText: { flex: 1 },
   title: { fontSize: 28, lineHeight: 36 },
   list: { gap: Spacing.two },
-  notification: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.two, padding: Spacing.three, borderRadius: Spacing.three },
+  notification: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.two, padding: Spacing.three, borderRadius: CardRadius },
   notificationIcon: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   notificationBody: { flex: 1, gap: Spacing.one },
   notificationTitle: { flexDirection: 'row', alignItems: 'center', gap: Spacing.one },
   dot: { width: 7, height: 7, borderRadius: 4 },
-  empty: { padding: Spacing.five, borderRadius: Spacing.three, alignItems: 'center', gap: Spacing.two },
+  empty: { padding: Spacing.five, borderRadius: CardRadius, alignItems: 'center', gap: Spacing.two },
   emptyIcon: { width: 60, height: 60, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   emptyText: { textAlign: 'center' },
 });

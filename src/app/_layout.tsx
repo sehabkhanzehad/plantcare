@@ -1,4 +1,5 @@
 import { DefaultTheme, ThemeProvider, Stack } from 'expo-router';
+import { StatusBar } from 'react-native';
 
 import { SplashScreenController } from '@/components/splash-screen-controller';
 import { SessionProvider, useSession } from '@/context/auth';
@@ -26,6 +27,11 @@ export default function RootLayout() {
       <PlantsProvider>
         <NotificationsProvider>
           <SplashScreenController />
+          <StatusBar
+            barStyle="dark-content"
+            backgroundColor={Colors.light.background}
+            translucent={false}
+          />
           <ThemeProvider value={navigationTheme}>
             <RootNavigator />
           </ThemeProvider>

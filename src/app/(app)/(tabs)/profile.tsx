@@ -7,7 +7,7 @@ import { Screen } from '@/components/ui/screen';
 import { useSession } from '@/context/auth';
 import { usePlants } from '@/context/plants';
 import { useTheme } from '@/hooks/use-theme';
-import { Spacing } from '@/constants/theme';
+import { CardRadius, Spacing } from '@/constants/theme';
 
 export default function ProfileScreen() {
   const theme = useTheme();
@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
   },
   card: {
     padding: Spacing.three,
-    borderRadius: Spacing.three,
+    borderRadius: CardRadius,
     gap: Spacing.three,
   },
   avatarRow: {

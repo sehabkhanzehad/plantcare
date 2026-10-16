@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
 import { usePlants } from '@/context/plants';
-import { Spacing } from '@/constants/theme';
+import { CardRadius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 export default function AddPlantScreen() {
@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
   },
   form: {
     padding: Spacing.two,
-    borderRadius: Spacing.three,
+    borderRadius: CardRadius,
     gap: Spacing.one,
   },
   stepSection: {
