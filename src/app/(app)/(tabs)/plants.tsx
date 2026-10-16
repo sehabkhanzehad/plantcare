@@ -1,6 +1,7 @@
 import { useState, type ComponentProps } from 'react';
-import { Modal, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Image, Modal, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { SymbolView } from 'expo-symbols';
+import { router } from 'expo-router';
 
 import { StatusChip } from '@/components/status-chip';
 import { ThemedText } from '@/components/themed-text';
@@ -16,8 +17,16 @@ export default function PlantsScreen() {
   const theme = useTheme();
   const [editingId, setEditingId] = useState<string>();
   const [deletingId, setDeletingId] = useState<string>();
+  const [query, setQuery] = useState('');
+  const [filter, setFilter] = useState<'All' | 'Healthy' | 'Needs Attention' | 'Overdue'>('All');
   const editingPlant = plants.find((plant) => plant.id === editingId);
   const deletingPlant = plants.find((plant) => plant.id === deletingId);
+  const filteredPlants = plants.filter((plant) => {
+    const matchesQuery = `${plant.name} ${plant.type} ${plant.nickname ?? ''}`
+      .toLowerCase()
+      .includes(query.trim().toLowerCase());
+    return matchesQuery && (filter === 'All' || plant.status === filter);
+  });
 
   return (
     <Screen scroll tabBarInset>
@@ -26,58 +35,108 @@ export default function PlantsScreen() {
         <ThemedText type="default" themeColor="textSecondary">
           {plants.length} plant{plants.length !== 1 ? 's' : ''} in your garden
         </ThemedText>
+        <TextInput
+          value={query}
+          onChangeText={setQuery}
+          placeholder="Search plants"
+          placeholderTextColor={theme.textSecondary}
+          style={[styles.searchInput, { color: theme.text, borderColor: theme.border }]}
+        />
+        <View style={styles.filters}>
+          {(['All', 'Healthy', 'Needs Attention', 'Overdue'] as const).map((item) => (
+            <Pressable
+              key={item}
+              onPress={() => setFilter(item)}
+              style={[
+                styles.filter,
+                { backgroundColor: filter === item ? theme.primary : theme.backgroundElement },
+              ]}>
+              <ThemedText type="small" style={{ color: filter === item ? theme.onPrimary : theme.textSecondary }}>
+                {item === 'Needs Attention' ? 'Needs Care' : item}
+              </ThemedText>
+            </Pressable>
+          ))}
+        </View>
       </View>
 
       <View style={styles.list}>
-        {plants.length === 0 ? (
+        {filteredPlants.length === 0 ? (
           <Empty />
         ) : (
-          plants.map((plant) => (
-            <ThemedView key={plant.id} type="backgroundElement" style={styles.card}>
-              <View style={styles.cardTop}>
-                <View style={styles.cardText}>
-                  <ThemedText type="smallBold">{plant.name}</ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {plant.type} · {plant.wateringFrequency} days watering cycle
-                  </ThemedText>
-                </View>
-                <View style={styles.cardTopRight}>
-                  <StatusChip status={plant.status} />
-                  <View style={styles.actions}>
-                    <Pressable
-                      accessibilityLabel={`Edit ${plant.name}`}
-                      onPress={() => setEditingId(plant.id)}
-                      style={[styles.iconButton, { backgroundColor: `${theme.primary}18` }]}>
+          filteredPlants.map((plant) => (
+            <Pressable
+              key={plant.id}
+              onPress={() =>
+                router.push({ pathname: '/plant/[id]', params: { id: plant.id } })
+              }
+              style={styles.cardPressable}>
+              <ThemedView type="backgroundElement" style={styles.card}>
+                <View style={styles.cardTop}>
+                  <View style={[styles.thumbnail, { backgroundColor: `${theme.primary}18` }]}>
+                    {plant.image ? (
+                      <Image
+                        source={{ uri: plant.image }}
+                        style={styles.thumbnailImage}
+                        accessibilityLabel={`${plant.name} photo`}
+                      />
+                    ) : (
                       <SymbolView
-                        name={{ ios: 'pencil', android: 'edit', web: 'edit' }}
+                        name={{ ios: 'leaf', android: 'eco', web: 'eco' }}
                         tintColor={theme.primary}
-                        size={18}
+                        size={24}
                       />
-                    </Pressable>
-                    <Pressable
-                      accessibilityLabel={`Delete ${plant.name}`}
-                      onPress={() => setDeletingId(plant.id)}
-                      style={[styles.iconButton, { backgroundColor: `${theme.danger}18` }]}>
-                      <SymbolView
-                        name={{ ios: 'trash', android: 'delete', web: 'delete' }}
-                        tintColor={theme.danger}
-                        size={18}
-                      />
-                    </Pressable>
+                    )}
+                  </View>
+                  <View style={styles.cardText}>
+                    <ThemedText type="smallBold">{plant.name}</ThemedText>
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {plant.type} · {plant.wateringFrequency} days watering cycle
+                    </ThemedText>
+                  </View>
+                  <View style={styles.cardTopRight}>
+                    <StatusChip status={plant.status} />
+                    <View style={styles.actions}>
+                      <Pressable
+                        accessibilityLabel={`Edit ${plant.name}`}
+                        onPress={(event) => {
+                          event.stopPropagation();
+                          setEditingId(plant.id);
+                        }}
+                        style={[styles.iconButton, { backgroundColor: `${theme.primary}18` }]}>
+                        <SymbolView
+                          name={{ ios: 'pencil', android: 'edit', web: 'edit' }}
+                          tintColor={theme.primary}
+                          size={18}
+                        />
+                      </Pressable>
+                      <Pressable
+                        accessibilityLabel={`Delete ${plant.name}`}
+                        onPress={(event) => {
+                          event.stopPropagation();
+                          setDeletingId(plant.id);
+                        }}
+                        style={[styles.iconButton, { backgroundColor: `${theme.danger}18` }]}>
+                        <SymbolView
+                          name={{ ios: 'trash', android: 'delete', web: 'delete' }}
+                          tintColor={theme.danger}
+                          size={18}
+                        />
+                      </Pressable>
+                    </View>
                   </View>
                 </View>
-              </View>
-              <View style={styles.cardBottom}>
-                <View style={styles.cardDetails}>
-                  <ThemedText type="small" themeColor="textSecondary">
-                    Last watered {plant.lastWatered}
-                  </ThemedText>
-                  <ThemedText type="smallBold" themeColor="textSecondary">
-                    Added {new Date(plant.createdAt).toLocaleDateString()}
-                  </ThemedText>
+                <View style={styles.cardBottom}>
+                  <View style={styles.cardDetails}>
+                    <ThemedText type="small" themeColor="textSecondary">
+                      Last watered {plant.lastWatered}
+                    </ThemedText>
+                    <ThemedText type="smallBold" themeColor="textSecondary">
+                      Added {new Date(plant.createdAt).toLocaleDateString()}
+                    </ThemedText>
+                  </View>
                 </View>
-              </View>
-            </ThemedView>
+              </ThemedView>
+            </Pressable>
           ))
         )}
       </View>
@@ -257,6 +316,24 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     marginBottom: Spacing.four,
   },
+  searchInput: {
+    minHeight: 46,
+    borderWidth: 1,
+    borderRadius: Spacing.two,
+    paddingHorizontal: Spacing.two,
+    fontSize: 16,
+    marginTop: Spacing.one,
+  },
+  filters: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.one,
+  },
+  filter: {
+    paddingHorizontal: Spacing.two,
+    paddingVertical: Spacing.one,
+    borderRadius: Spacing.four,
+  },
   list: {
     gap: Spacing.two,
   },
@@ -265,15 +342,31 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.three,
     gap: Spacing.two,
   },
+  cardPressable: {
+    width: '100%',
+  },
   cardTop: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
   cardText: {
     flex: 1,
     gap: 2,
+    paddingTop: Spacing.one,
+  },
+  thumbnail: {
+    width: 64,
+    height: 64,
+    borderRadius: Spacing.two,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  thumbnailImage: {
+    width: '100%',
+    height: '100%',
   },
   cardTopRight: {
     alignItems: 'flex-end',

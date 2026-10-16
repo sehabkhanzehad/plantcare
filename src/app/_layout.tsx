@@ -4,6 +4,7 @@ import { useColorScheme } from 'react-native';
 import { SplashScreenController } from '@/components/splash-screen-controller';
 import { SessionProvider, useSession } from '@/context/auth';
 import { PlantsProvider } from '@/context/plants';
+import { NotificationsProvider } from '@/context/notifications';
 import { Colors } from '@/constants/theme';
 
 export default function RootLayout() {
@@ -25,10 +26,12 @@ export default function RootLayout() {
   return (
     <SessionProvider>
       <PlantsProvider>
-        <SplashScreenController />
-        <ThemeProvider value={navigationTheme}>
-          <RootNavigator />
-        </ThemeProvider>
+        <NotificationsProvider>
+          <SplashScreenController />
+          <ThemeProvider value={navigationTheme}>
+            <RootNavigator />
+          </ThemeProvider>
+        </NotificationsProvider>
       </PlantsProvider>
     </SessionProvider>
   );

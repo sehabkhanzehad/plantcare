@@ -7,9 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "plantcare",
     "userInterfaceStyle": "automatic",
-    "ios": {
-      "icon": "./assets/expo.icon"
-    },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E8F2E9",
@@ -25,6 +22,12 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow PlantCare to access your photos for plant profiles and growth tracking."
+        }
+      ],
       [
         "expo-splash-screen",
         {

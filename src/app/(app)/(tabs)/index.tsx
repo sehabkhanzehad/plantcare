@@ -1,5 +1,5 @@
 import { type ReactNode, useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 
@@ -12,11 +12,13 @@ import { useSession } from '@/context/auth';
 import { usePlants } from '@/context/plants';
 import { useTheme } from '@/hooks/use-theme';
 import { Spacing } from '@/constants/theme';
+import { useNotifications } from '@/context/notifications';
 
 export default function DashboardScreen() {
   const theme = useTheme();
   const { user } = useSession();
   const { plants, waterPlant } = usePlants();
+  const { unreadCount } = useNotifications();
   const firstName = user?.name?.split(' ')[0] || 'Plant Lover';
 
   const total = plants.length;
@@ -43,17 +45,42 @@ export default function DashboardScreen() {
   return (
     <Screen scroll tabBarInset>
       <View style={styles.header}>
-        <View style={styles.brand}>
-          <View style={[styles.logoMark, { backgroundColor: theme.primary }]}>
-            <SymbolView
-              name={{ ios: 'leaf.fill', android: 'eco', web: 'eco' }}
-              tintColor={theme.onPrimary}
-              size={18}
-            />
+        <View style={styles.headerMain}>
+          <View style={styles.brand}>
+            <View style={[styles.logoMark, { backgroundColor: theme.primary }]}>
+              <SymbolView
+                name={{ ios: 'leaf.fill', android: 'eco', web: 'eco' }}
+                tintColor={theme.onPrimary}
+                size={18}
+              />
+            </View>
+            <ThemedText type="subtitle" style={styles.brandText}>
+              PlantCare
+            </ThemedText>
           </View>
-          <ThemedText type="subtitle" style={styles.brandText}>
-            PlantCare
-          </ThemedText>
+          <Pressable
+            onPress={() => router.push('/notifications')}
+            accessibilityLabel="Open notifications"
+            style={[styles.notificationButton, { backgroundColor: `${theme.primary}12` }]}>
+            <View style={[styles.notificationIcon, { backgroundColor: `${theme.primary}20` }]}>
+              <SymbolView
+                name={{
+                  ios: unreadCount ? 'bell.badge.fill' : 'bell.badge',
+                  android: 'notifications_active',
+                  web: 'notifications_active',
+                }}
+                tintColor={theme.primary}
+                size={18}
+              />
+            </View>
+            {unreadCount > 0 ? (
+              <View style={[styles.notificationBadge, { backgroundColor: theme.danger, borderColor: theme.background }]}>
+                <ThemedText type="smallBold" style={styles.notificationBadgeText}>
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </ThemedText>
+              </View>
+            ) : null}
+          </Pressable>
         </View>
         <ThemedText type="small" themeColor="textSecondary" style={styles.date}>
           {nowStr}
@@ -206,11 +233,13 @@ function StatCard({
 
 const styles = StyleSheet.create({
   header: {
+    marginBottom: Spacing.four,
+  },
+  headerMain: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.two,
-    marginBottom: Spacing.four,
   },
   brand: {
     flexDirection: 'row',
@@ -249,6 +278,37 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     fontSize: 14,
     lineHeight: 20,
+  },
+  notificationButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  notificationIcon: {
+    width: 29,
+    height: 29,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    minWidth: 20,
+    height: 20,
+    paddingHorizontal: 5,
+    borderRadius: 10,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  notificationBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    lineHeight: 14,
   },
   iconBadge: {
     width: 28,

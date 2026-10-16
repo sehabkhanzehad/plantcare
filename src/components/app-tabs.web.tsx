@@ -29,6 +29,9 @@ export default function AppTabs() {
           <TabTrigger name="add-plant" href="/add-plant" asChild>
             <TabButton iconName="plus.circle.fill">Add Plant</TabButton>
           </TabTrigger>
+          <TabTrigger name="notifications" href="/notifications" asChild>
+            <TabButton iconName="bell.fill">Alerts</TabButton>
+          </TabTrigger>
           <TabTrigger name="profile" href="/profile" asChild>
             <TabButton iconName="person.fill">Profile</TabButton>
           </TabTrigger>
