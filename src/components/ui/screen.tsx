@@ -1,4 +1,11 @@
-import { ScrollView, StyleSheet, View, type ViewProps } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  View,
+  type ViewProps,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedView } from '@/components/themed-view';
@@ -35,12 +42,19 @@ export function Screen({
     <ThemedView style={styles.root}>
       <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
         {scroll ? (
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}>
-            {content}
-          </ScrollView>
+          <KeyboardAvoidingView
+            style={styles.keyboardAvoiding}
+            behavior="padding"
+            keyboardVerticalOffset={0}>
+            <ScrollView
+              style={styles.scroll}
+              contentContainerStyle={styles.scrollContent}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+              showsVerticalScrollIndicator={false}>
+              {content}
+            </ScrollView>
+          </KeyboardAvoidingView>
         ) : (
           content
         )}
@@ -59,12 +73,21 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    alignItems: 'center',
+    width: '100%',
+    alignItems: 'stretch',
+  },
+  scroll: {
+    width: '100%',
+  },
+  keyboardAvoiding: {
+    flex: 1,
+    width: '100%',
   },
   content: {
     flex: 1,
     width: '100%',
     maxWidth: MaxContentWidth,
+    alignSelf: 'center',
   },
   padded: {
     paddingHorizontal: Spacing.four,

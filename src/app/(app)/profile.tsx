@@ -5,13 +5,21 @@ import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
 import { useSession } from '@/context/auth';
+import { usePlants } from '@/context/plants';
+import { useTheme } from '@/hooks/use-theme';
 import { Spacing } from '@/constants/theme';
 
 export default function ProfileScreen() {
+  const theme = useTheme();
   const { user, signOut } = useSession();
+  const { plants } = usePlants();
+
+  const total = plants.length;
+  const healthy = plants.filter((p) => p.status === 'Healthy').length;
+  const attention = plants.filter((p) => p.status !== 'Healthy').length;
 
   return (
-    <Screen tabBarInset>
+    <Screen scroll tabBarInset>
       <View style={styles.header}>
         <ThemedText type="subtitle">Profile</ThemedText>
         <ThemedText type="default" themeColor="textSecondary">
@@ -20,11 +28,37 @@ export default function ProfileScreen() {
       </View>
 
       <ThemedView type="backgroundElement" style={styles.card}>
-        <InfoRow label="Name" value={user?.name ?? '—'} />
-        <InfoRow label="Email" value={user?.email ?? '—'} />
+        <View style={styles.avatarRow}>
+          <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
+            <ThemedText type="title" style={styles.avatarText}>
+              {user?.name?.charAt(0) ?? '?'}
+            </ThemedText>
+          </View>
+          <View style={styles.avatarInfo}>
+            <ThemedText type="title" style={styles.displayName}>
+              {user?.name ?? 'Plant Lover'}
+            </ThemedText>
+            <ThemedText type="default" themeColor="textSecondary" style={styles.email}>
+              {user?.email ?? '—'}
+            </ThemedText>
+          </View>
+        </View>
+        <ThemedView type="border" style={styles.divider} />
+        <InfoRow label="Member since" value="Today" />
+        <InfoRow label="Plants tracked" value={String(total)} />
+        <InfoRow label="Healthy" value={String(healthy)} />
+        <InfoRow label="Needs attention" value={String(attention)} />
       </ThemedView>
 
-      <Button title="Sign out" variant="danger" onPress={signOut} style={styles.signOut} />
+      <View style={styles.actions}>
+        <Button
+          title="Edit profile"
+          variant="secondary"
+          style={styles.editBtn}
+          onPress={() => {}}
+        />
+        <Button title="Sign out" variant="danger" onPress={signOut} style={styles.signOut} />
+      </View>
     </Screen>
   );
 }
@@ -50,10 +84,58 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.three,
     gap: Spacing.three,
   },
-  infoRow: {
+  avatarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
+    marginBottom: Spacing.two,
+  },
+  avatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    fontSize: 24,
+    lineHeight: 28,
+    fontWeight: '600' as const,
+    color: '#FFFFFF',
+  },
+  avatarInfo: {
     gap: Spacing.one,
   },
-  signOut: {
+  displayName: {
+    fontSize: 20,
+    lineHeight: 26,
+    fontWeight: '600' as const,
+  },
+  email: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  divider: {
+    height: 1,
+    marginVertical: Spacing.two,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: Spacing.one,
+    paddingVertical: Spacing.one,
+  },
+  actions: {
+    gap: Spacing.two,
     marginTop: Spacing.five,
+  },
+  editBtn: {
+    minHeight: 48,
+    borderRadius: Spacing.three,
+    paddingHorizontal: Spacing.three,
+  },
+  signOut: {
+    minHeight: 48,
+    borderRadius: Spacing.three,
   },
 });

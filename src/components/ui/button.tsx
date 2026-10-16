@@ -15,6 +15,7 @@ type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
 export type ButtonProps = PressableProps & {
   title: string;
+  icon?: string;
   variant?: ButtonVariant;
   loading?: boolean;
   style?: StyleProp<ViewStyle>;
@@ -22,6 +23,7 @@ export type ButtonProps = PressableProps & {
 
 export function Button({
   title,
+  icon,
   variant = 'primary',
   loading = false,
   disabled,
@@ -57,8 +59,8 @@ export function Button({
       {loading ? (
         <ActivityIndicator color={textColor} />
       ) : (
-        <ThemedText type="smallBold" style={{ color: textColor }}>
-          {title}
+        <ThemedText type="smallBold" numberOfLines={1} style={[styles.label, { color: textColor }]}>
+          {icon ? `${icon}  ${title}` : title}
         </ThemedText>
       )}
     </Pressable>
@@ -75,5 +77,9 @@ const styles = StyleSheet.create({
   },
   ghost: {
     minHeight: 40,
+  },
+  label: {
+    flexShrink: 1,
+    textAlign: 'center',
   },
 });

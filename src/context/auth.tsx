@@ -1,4 +1,4 @@
-import { createContext, use, type PropsWithChildren } from 'react';
+import { createContext, useContext, type PropsWithChildren } from 'react';
 
 import { useStorageState } from '@/hooks/use-storage-state';
 
@@ -34,7 +34,7 @@ function parseUser(raw: string | null): AuthUser | null {
 }
 
 export function useSession() {
-  const value = use(AuthContext);
+  const value = useContext(AuthContext);
   if (!value) {
     throw new Error('useSession must be wrapped in a <SessionProvider />');
   }
