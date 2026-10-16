@@ -1,5 +1,4 @@
-import { DarkTheme, DefaultTheme, ThemeProvider, Stack } from 'expo-router';
-import { useColorScheme } from 'react-native';
+import { DefaultTheme, ThemeProvider, Stack } from 'expo-router';
 
 import { SplashScreenController } from '@/components/splash-screen-controller';
 import { SessionProvider, useSession } from '@/context/auth';
@@ -8,13 +7,12 @@ import { NotificationsProvider } from '@/context/notifications';
 import { Colors } from '@/constants/theme';
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const scheme = colorScheme === 'unspecified' || colorScheme == null ? 'light' : colorScheme;
+  const scheme = 'light';
 
   const navigationTheme = {
-    ...(scheme === 'dark' ? DarkTheme : DefaultTheme),
+    ...DefaultTheme,
     colors: {
-      ...(scheme === 'dark' ? DarkTheme.colors : DefaultTheme.colors),
+      ...DefaultTheme.colors,
       primary: Colors[scheme].primary,
       background: Colors[scheme].background,
       card: Colors[scheme].background,

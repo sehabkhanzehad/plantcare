@@ -135,11 +135,11 @@ function PlantForm({ editId }: { editId?: string }) {
   }
 
   return (
-    <Screen scroll padded tabBarInset>
+    <Screen padded tabBarInset>
       <View style={styles.header}>
         <ThemedText type="subtitle">{editId ? 'Edit plant' : 'Add a plant'}</ThemedText>
         <ThemedText type="default" themeColor="textSecondary">
-          {editId ? 'Update your plant details' : `Step ${step} of 3 · Tell us about your new plant friend`}
+          {editId ? 'Update plant details' : `Step ${step} of 3 · Plant details`}
         </ThemedText>
         {!editId ? (
           <View style={styles.progressRow}>
@@ -199,7 +199,7 @@ function PlantForm({ editId }: { editId?: string }) {
         </Pressable> : null}
         {step === 1 ? <View style={styles.stepSection}>
         <TextField
-          label="Plant name"
+          label="Name"
           placeholder="e.g. Monstera"
           value={name}
           onChangeText={setName}
@@ -207,7 +207,7 @@ function PlantForm({ editId }: { editId?: string }) {
           error={errors.name}
         />
         <TextField
-          label="Plant type"
+          label="Type"
           placeholder="e.g. Tropical"
           value={type}
           onChangeText={setType}
@@ -215,14 +215,14 @@ function PlantForm({ editId }: { editId?: string }) {
           error={errors.type}
         />
         <TextField
-          label="Nickname (optional)"
+          label="Nickname"
           placeholder="e.g. Mona"
           value={nickname}
           onChangeText={setNickname}
           autoCapitalize="words"
         />
         <TextField
-          label="Water every (days)"
+          label="Watering (days)"
           placeholder="e.g. 7"
           value={frequency}
           onChangeText={setFrequency}
@@ -230,7 +230,7 @@ function PlantForm({ editId }: { editId?: string }) {
           error={errors.frequency}
         />
         <TextField
-          label="Plant age (optional)"
+          label="Age"
           placeholder="e.g. 2 years"
           value={age}
           onChangeText={setAge}
@@ -238,32 +238,32 @@ function PlantForm({ editId }: { editId?: string }) {
         </View> : null}
         {step === 2 ? <View style={styles.stepSection}>
         <TextField
-          label="Fertilize every (days, optional)"
+          label="Fertilizing (days)"
           placeholder="e.g. 30"
           value={fertilizingFrequency}
           onChangeText={setFertilizingFrequency}
           keyboardType="numeric"
         />
         <TextField
-          label="Light requirement (optional)"
+          label="Light"
           placeholder="e.g. Bright indirect light"
           value={light}
           onChangeText={setLight}
         />
         <TextField
-          label="Location (optional)"
+          label="Location"
           placeholder="e.g. Living room"
           value={location}
           onChangeText={setLocation}
         />
         <TextField
-          label="Soil type (optional)"
+          label="Soil"
           placeholder="e.g. Well-draining potting mix"
           value={soilType}
           onChangeText={setSoilType}
         />
         <TextField
-          label="Pot size (optional)"
+          label="Pot size"
           placeholder="e.g. 8 inch"
           value={potSize}
           onChangeText={setPotSize}
@@ -271,7 +271,7 @@ function PlantForm({ editId }: { editId?: string }) {
         </View> : null}
         {step === 3 ? <View style={styles.stepSection}>
         <TextField
-          label="Acquisition date (optional)"
+          label="Acquired"
           placeholder="e.g. 2026-10-16"
           value={acquisitionDate}
           onChangeText={setAcquisitionDate}
@@ -295,7 +295,7 @@ function PlantForm({ editId }: { editId?: string }) {
           <Switch value={reminderEnabled} onValueChange={setReminderEnabled} />
         </View>
         <TextField
-          label="Notes (optional)"
+          label="Notes"
           placeholder="Any care notes?"
           value={notes}
           onChangeText={setNotes}
@@ -324,7 +324,7 @@ function PlantForm({ editId }: { editId?: string }) {
 const styles = StyleSheet.create({
   header: {
     gap: Spacing.two,
-    marginBottom: Spacing.four,
+    marginBottom: Spacing.three,
   },
   progressRow: {
     flexDirection: 'row',
@@ -337,25 +337,25 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   form: {
-    padding: Spacing.three,
+    padding: Spacing.two,
     borderRadius: Spacing.three,
-    gap: Spacing.two,
+    gap: Spacing.one,
   },
   stepSection: {
-    gap: Spacing.three,
+    gap: Spacing.two,
   },
   stepActions: {
     flexDirection: 'row',
     gap: Spacing.two,
-    marginTop: Spacing.two,
+    marginTop: Spacing.one,
   },
   stepButton: {
     flex: 1,
   },
   cta: {
-    minHeight: 52,
+    minHeight: 48,
     borderRadius: Spacing.three,
-    marginTop: Spacing.two,
+    marginTop: Spacing.one,
   },
   photoPicker: {
     minHeight: 72,

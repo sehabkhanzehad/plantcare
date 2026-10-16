@@ -17,7 +17,7 @@ import { useNotifications } from '@/context/notifications';
 export default function DashboardScreen() {
   const theme = useTheme();
   const { user } = useSession();
-  const { plants, waterPlant } = usePlants();
+  const { plants, careLogs, waterPlant } = usePlants();
   const { unreadCount } = useNotifications();
   const firstName = user?.name?.split(' ')[0] || 'Plant Lover';
 
@@ -43,7 +43,7 @@ export default function DashboardScreen() {
   const needsAttention = plants.filter((p) => p.status !== 'Healthy');
 
   return (
-    <Screen scroll tabBarInset>
+    <Screen tabBarInset>
       <View style={styles.header}>
         <View style={styles.headerMain}>
           <View style={styles.brand}>
@@ -97,20 +97,12 @@ export default function DashboardScreen() {
       </View>
 
       <View style={styles.statsRow}>
-        <StatCard label="Total Plants" value={total} icon="🌱" color={theme.primary} />
-        <StatCard
-          label="Healthy"
-          value={healthy}
-          icon="🍃"
-          color={theme.statusHealthy}
-        />
-        <StatCard
-          label="Needs Care"
-          value={attention}
-          icon="⚠"
-          color={theme.statusAttention}
-        />
-        <StatCard label="Overdue" value={overdue} icon="⏰" color={theme.statusOverdue} />
+        <StatCard label="Plants" value={total} icon="🌱" color={theme.primary} backgroundColor="#F4F8F4" />
+        <StatCard label="Healthy" value={healthy} icon="🍃" color={theme.statusHealthy} backgroundColor="#F1F7F2" />
+        <StatCard label="Care" value={attention} icon="⚠" color={theme.statusAttention} backgroundColor="#FFF8EC" />
+        <StatCard label="Overdue" value={overdue} icon="⏰" color={theme.statusOverdue} backgroundColor="#FFF1F0" />
+        <StatCard label="Logs" value={careLogs.length} icon="✓" color="#5A63A8" backgroundColor="#F4F3FB" />
+        <StatCard label="Alerts" value={unreadCount} icon="●" color="#B06B42" backgroundColor="#FBF3EE" />
       </View>
 
       <Section title="Today's tasks">
@@ -206,14 +198,16 @@ function StatCard({
   value,
   icon,
   color,
+  backgroundColor,
 }: {
   label: string;
   value: number;
   icon: string;
   color: string;
+  backgroundColor: string;
 }) {
   return (
-    <ThemedView type="backgroundElement" style={styles.statCard}>
+    <ThemedView type="background" style={[styles.statCard, { backgroundColor }]}>
       <View style={styles.statTop}>
         <ThemedText type="smallBold" themeColor="textSecondary" style={styles.statLabel}>
           {label}
@@ -301,7 +295,6 @@ const styles = StyleSheet.create({
     height: 20,
     paddingHorizontal: 5,
     borderRadius: 10,
-    borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -321,14 +314,14 @@ const styles = StyleSheet.create({
   statsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: Spacing.three,
+    justifyContent: 'space-between',
+    rowGap: Spacing.two,
     marginBottom: Spacing.four,
   },
   statCard: {
-    flex: 1,
-    minWidth: 150,
-    padding: Spacing.three,
-    borderRadius: Spacing.three,
+    width: '31.5%',
+    padding: Spacing.two,
+    borderRadius: 18,
     gap: Spacing.one,
   },
   statTop: {
@@ -337,12 +330,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   statLabel: {
+    fontSize: 11,
+    lineHeight: 15,
     flex: 1,
-    flexShrink: 1,
   },
   statValue: {
-    fontSize: 28,
-    lineHeight: 36,
+    fontSize: 24,
+    lineHeight: 28,
     fontWeight: 700,
   },
   section: {

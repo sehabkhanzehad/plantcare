@@ -52,7 +52,10 @@ export default function NotificationsScreen() {
                 }}>
                 <ThemedView
                   type="backgroundElement"
-                  style={[styles.notification, isUnread && styles.unread]}>
+                  style={[
+                    styles.notification,
+                    isUnread && { borderWidth: 1, borderColor: `${theme.primary}55` },
+                  ]}>
                   <View style={[styles.notificationIcon, { backgroundColor: `${theme.statusAttention}22` }]}>
                     <SymbolView name={{ ios: 'drop.fill', android: 'water_drop', web: 'water_drop' }} tintColor={theme.statusAttention} size={20} />
                   </View>
@@ -79,7 +82,6 @@ const styles = StyleSheet.create({
   title: { fontSize: 28, lineHeight: 36 },
   list: { gap: Spacing.two },
   notification: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.two, padding: Spacing.three, borderRadius: Spacing.three },
-  unread: { borderWidth: 1, borderColor: '#2F6F3E55' },
   notificationIcon: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   notificationBody: { flex: 1, gap: Spacing.one },
   notificationTitle: { flexDirection: 'row', alignItems: 'center', gap: Spacing.one },
