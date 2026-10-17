@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { Link, router } from 'expo-router';
+import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import {
   useFonts,
@@ -134,17 +134,21 @@ export default function DashboardScreen() {
           </View>
         </View>
         <View style={styles.topActions}>
-          <Link href="/calendar" asChild>
-            <Pressable accessibilityLabel="Open calendar" hitSlop={12} style={[styles.bell, { backgroundColor: theme.surface }]}>
-              <CalendarDays size={20} color={theme.text} strokeWidth={1.8} pointerEvents="none" />
-            </Pressable>
-          </Link>
-          <Link href="/notifications" asChild>
-            <Pressable accessibilityLabel="Open notifications" hitSlop={12} style={[styles.bell, { backgroundColor: theme.surface }]}>
-              <Bell size={20} color={theme.text} strokeWidth={1.8} pointerEvents="none" />
-              {unreadCount > 0 ? <View style={[styles.unread, { backgroundColor: theme.primary }]} pointerEvents="none" /> : null}
-            </Pressable>
-          </Link>
+          <Pressable
+            accessibilityLabel="Open calendar"
+            hitSlop={12}
+            onPress={() => router.push('/calendar')}
+            style={[styles.bell, { backgroundColor: theme.surface }]}>
+            <CalendarDays size={20} color={theme.text} strokeWidth={1.8} pointerEvents="none" />
+          </Pressable>
+          <Pressable
+            accessibilityLabel="Open notifications"
+            hitSlop={12}
+            onPress={() => router.push('/notifications')}
+            style={[styles.bell, { backgroundColor: theme.surface }]}>
+            <Bell size={20} color={theme.text} strokeWidth={1.8} pointerEvents="none" />
+            {unreadCount > 0 ? <View style={[styles.unread, { backgroundColor: theme.primary }]} pointerEvents="none" /> : null}
+          </Pressable>
         </View>
       </View>
 

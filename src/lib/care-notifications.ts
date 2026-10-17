@@ -9,16 +9,50 @@ import {
   isCarePaused,
 } from '@/lib/care';
 
-type ExpoNotifications = typeof import('expo-notifications');
+type CareNotificationsModule = {
+  setNotificationHandler: (typeof import('expo-notifications/build/NotificationsHandler'))['setNotificationHandler'];
+  getPermissionsAsync: (typeof import('expo-notifications/build/NotificationPermissions'))['getPermissionsAsync'];
+  requestPermissionsAsync: (typeof import('expo-notifications/build/NotificationPermissions'))['requestPermissionsAsync'];
+  setNotificationChannelAsync: (typeof import('expo-notifications/build/setNotificationChannelAsync'))['setNotificationChannelAsync'];
+  AndroidImportance: (typeof import('expo-notifications/build/NotificationChannelManager.types'))['AndroidImportance'];
+  cancelScheduledNotificationAsync: (typeof import('expo-notifications/build/cancelScheduledNotificationAsync'))['cancelScheduledNotificationAsync'];
+  scheduleNotificationAsync: (typeof import('expo-notifications/build/scheduleNotificationAsync'))['scheduleNotificationAsync'];
+  SchedulableTriggerInputTypes: (typeof import('expo-notifications/build/Notifications.types'))['SchedulableTriggerInputTypes'];
+  getAllScheduledNotificationsAsync: (typeof import('expo-notifications/build/getAllScheduledNotificationsAsync'))['getAllScheduledNotificationsAsync'];
+  addNotificationResponseReceivedListener: (typeof import('expo-notifications/build/NotificationsEmitter'))['addNotificationResponseReceivedListener'];
+};
 
 let handlerConfigured = false;
+let notificationsModule: CareNotificationsModule | null | undefined;
 
-async function loadNotifications(): Promise<ExpoNotifications | null> {
+async function loadNotifications(): Promise<CareNotificationsModule | null> {
   if (Platform.OS === 'web') return null;
+  if (notificationsModule !== undefined) return notificationsModule;
   try {
-    const Notifications = await import('expo-notifications');
+    const [
+      handler,
+      permissions,
+      channels,
+      channelTypes,
+      cancelScheduled,
+      schedule,
+      types,
+      getAllScheduled,
+      emitter,
+    ] = await Promise.all([
+      import('expo-notifications/build/NotificationsHandler'),
+      import('expo-notifications/build/NotificationPermissions'),
+      import('expo-notifications/build/setNotificationChannelAsync'),
+      import('expo-notifications/build/NotificationChannelManager.types'),
+      import('expo-notifications/build/cancelScheduledNotificationAsync'),
+      import('expo-notifications/build/scheduleNotificationAsync'),
+      import('expo-notifications/build/Notifications.types'),
+      import('expo-notifications/build/getAllScheduledNotificationsAsync'),
+      import('expo-notifications/build/NotificationsEmitter'),
+    ]);
+
     if (!handlerConfigured) {
-      Notifications.setNotificationHandler({
+      handler.setNotificationHandler({
         handleNotification: async () => ({
           shouldShowAlert: true,
           shouldPlaySound: true,
@@ -29,8 +63,22 @@ async function loadNotifications(): Promise<ExpoNotifications | null> {
       });
       handlerConfigured = true;
     }
-    return Notifications;
+
+    notificationsModule = {
+      setNotificationHandler: handler.setNotificationHandler,
+      getPermissionsAsync: permissions.getPermissionsAsync,
+      requestPermissionsAsync: permissions.requestPermissionsAsync,
+      setNotificationChannelAsync: channels.setNotificationChannelAsync,
+      AndroidImportance: channelTypes.AndroidImportance,
+      cancelScheduledNotificationAsync: cancelScheduled.cancelScheduledNotificationAsync,
+      scheduleNotificationAsync: schedule.scheduleNotificationAsync,
+      SchedulableTriggerInputTypes: types.SchedulableTriggerInputTypes,
+      getAllScheduledNotificationsAsync: getAllScheduled.getAllScheduledNotificationsAsync,
+      addNotificationResponseReceivedListener: emitter.addNotificationResponseReceivedListener,
+    };
+    return notificationsModule;
   } catch {
+    notificationsModule = null;
     return null;
   }
 }
@@ -44,7 +92,7 @@ export async function ensureNotificationPermissions(): Promise<boolean> {
   return status === 'granted';
 }
 
-async function ensureAndroidChannel(Notifications: ExpoNotifications) {
+async function ensureAndroidChannel(Notifications: CareNotificationsModule) {
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync('care-reminders', {
       name: 'Care reminders',
@@ -101,7 +149,7 @@ function triggerAt(dueDate: string, hour: number, minute: number): Date {
 }
 
 async function scheduleOne(
-  Notifications: ExpoNotifications,
+  Notifications: CareNotificationsModule,
   identifier: string,
   title: string,
   body: string,
