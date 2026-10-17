@@ -78,7 +78,7 @@ export default function ShopListingDetailScreen() {
   return (
     <Screen scroll padded>
       <View style={styles.topBar}>
-        <Pressable accessibilityLabel="Go back" onPress={() => router.back()} style={styles.iconButton}>
+        <Pressable accessibilityLabel="Go back" onPress={() => router.back()} style={[styles.iconButton, { backgroundColor: theme.surface }]}>
           <ArrowLeft size={20} color={theme.text} strokeWidth={1.8} />
         </Pressable>
         {isOwner ? (
@@ -152,7 +152,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
   },

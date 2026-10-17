@@ -6,32 +6,35 @@ import {
   TabTriggerSlotProps,
   TabListProps,
 } from 'expo-router/ui';
-import { Pressable, View, StyleSheet } from 'react-native';
+import { Pressable, View, StyleSheet, Platform } from 'react-native';
 
 import { House, Leaf, MessagesSquare, Plus, UserRound, type LucideIcon } from 'lucide-react-native';
 
 import { CardRadius, Colors, MaxContentWidth } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 export default function AppTabs() {
+  const colors = useTheme();
+
   return (
     <Tabs>
       <TabSlot style={{ height: '100%' }} />
       <TabList asChild>
-        <CustomTabList>
+        <CustomTabList colors={colors}>
           <TabTrigger name="dashboard" href="/" asChild>
-            <TabButton icon={House} label="Dashboard" />
+            <TabButton icon={House} label="Dashboard" colors={colors} />
           </TabTrigger>
           <TabTrigger name="plants" href="/plants" asChild>
-            <TabButton icon={Leaf} label="Plants" />
+            <TabButton icon={Leaf} label="Plants" colors={colors} />
           </TabTrigger>
           <TabTrigger name="add-plant" href="/add-plant" asChild>
-            <TabButton icon={Plus} label="Add plant" featured />
+            <TabButton icon={Plus} label="Add plant" featured colors={colors} />
           </TabTrigger>
           <TabTrigger name="community" href="/community" asChild>
-            <TabButton icon={MessagesSquare} label="Community" />
+            <TabButton icon={MessagesSquare} label="Community" colors={colors} />
           </TabTrigger>
           <TabTrigger name="profile" href="/profile" asChild>
-            <TabButton icon={UserRound} label="Profile" />
+            <TabButton icon={UserRound} label="Profile" colors={colors} />
           </TabTrigger>
         </CustomTabList>
       </TabList>
@@ -44,14 +47,14 @@ export function TabButton({
   label,
   featured = false,
   isFocused,
+  colors,
   ...props
 }: TabTriggerSlotProps & {
   icon: LucideIcon;
   label: string;
   featured?: boolean;
+  colors: typeof Colors[keyof typeof Colors];
 }) {
-  const colors = Colors.light;
-
   return (
     <Pressable
       {...props}
@@ -60,11 +63,11 @@ export function TabButton({
       <View
         style={[
           featured ? styles.featuredIcon : styles.iconWrap,
-          featured && { backgroundColor: colors.text },
+          featured && { backgroundColor: colors.primary },
         ]}>
         <Icon
           size={featured ? 20 : 21}
-          color={featured ? '#CFF27E' : isFocused ? colors.primary : colors.textSecondary}
+          color={featured ? colors.onPrimary : isFocused ? colors.primary : colors.textSecondary}
           strokeWidth={1.8}
         />
       </View>
@@ -75,10 +78,20 @@ export function TabButton({
   );
 }
 
-export function CustomTabList({ style, children, ...props }: TabListProps) {
+export function CustomTabList({ style, children, colors, ...props }: TabListProps & { colors: typeof Colors[keyof typeof Colors] }) {
   return (
     <View {...props} style={[style, styles.tabListContainer]} pointerEvents="box-none">
-      <View style={styles.innerContainer} pointerEvents="auto">
+      <View
+        style={[
+          styles.innerContainer,
+          { backgroundColor: colors.surface, borderColor: colors.border },
+          Platform.OS === 'web'
+            ? {
+                boxShadow: '0 8px 20px rgba(0,0,0,0.12)',
+              }
+            : {},
+        ]}
+        pointerEvents="auto">
         {children}
       </View>
     </View>
@@ -99,16 +112,12 @@ const styles = StyleSheet.create({
     height: 64,
     paddingHorizontal: 12,
     borderRadius: CardRadius,
-    backgroundColor: '#FFFFFF',
+    borderWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
     width: '100%',
     maxWidth: MaxContentWidth,
-    shadowColor: '#0E1D15',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 20,
     elevation: 8,
   },
   tabButton: {

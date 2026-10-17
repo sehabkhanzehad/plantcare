@@ -75,7 +75,7 @@ export default function CommunityScreen() {
               style={[
                 styles.segment,
                 {
-                  backgroundColor: active ? theme.primary : '#FFFFFF',
+                  backgroundColor: active ? theme.primary : theme.surface,
                   borderColor: theme.border,
                 },
               ]}>
@@ -107,7 +107,7 @@ export default function CommunityScreen() {
           </Pressable>
         </View>
 
-        <View style={[styles.searchBar, { borderColor: theme.border, backgroundColor: '#FFFFFF' }]}>
+        <View style={[styles.searchBar, { borderColor: theme.border, backgroundColor: theme.surface }]}>
           <Search size={18} color={theme.textSecondary} strokeWidth={1.8} />
           <TextInput
             value={query}
@@ -146,7 +146,7 @@ export default function CommunityScreen() {
                 onPress={() => setFilter(item)}
                 style={[
                   styles.chip,
-                  { backgroundColor: active ? theme.primary : '#FFFFFF', borderColor: theme.border },
+                  { backgroundColor: active ? theme.primary : theme.surface, borderColor: theme.border },
                 ]}>
                 <ThemedText type="small" style={{ color: active ? theme.onPrimary : theme.textSecondary }}>
                   {item}
@@ -159,7 +159,7 @@ export default function CommunityScreen() {
 
       <View style={styles.list}>
         {filtered.length === 0 ? (
-          <ThemedView type="backgroundElement" style={[styles.empty, { backgroundColor: '#FFFFFF' }]}>
+          <ThemedView type="backgroundElement" style={styles.empty}>
             <ThemedText type="smallBold">No posts yet</ThemedText>
             <ThemedText type="small" themeColor="textSecondary" style={styles.emptyCopy}>
               Be the first to ask a plant question or share a tip.
@@ -212,7 +212,7 @@ function PostCard({
 
   return (
     <Pressable onPress={onPress}>
-      <ThemedView type="backgroundElement" style={[styles.card, { backgroundColor: '#FFFFFF' }]}>
+      <ThemedView type="backgroundElement" style={styles.card}>
         <View style={styles.cardTop}>
           <View style={[styles.avatar, { backgroundColor: `${theme.primary}18` }]}>
             <ThemedText type="smallBold" style={{ color: theme.primary }}>

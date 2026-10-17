@@ -108,7 +108,7 @@ export default function CreateShopListingScreen() {
   return (
     <Screen scroll padded>
       <View style={styles.header}>
-        <Pressable accessibilityLabel="Go back" onPress={() => router.back()} style={styles.back}>
+        <Pressable accessibilityLabel="Go back" onPress={() => router.back()} style={[styles.back, { backgroundColor: theme.surface }]}>
           <ArrowLeft size={20} color={theme.text} strokeWidth={1.8} />
         </Pressable>
         <View style={styles.headerCopy}>
@@ -123,7 +123,7 @@ export default function CreateShopListingScreen() {
         {isAdmin ? (
           <Pressable
             onPress={() => setOfficialStore((value) => !value)}
-            style={[styles.officialToggle, { borderColor: theme.border, backgroundColor: '#FFFFFF' }]}>
+            style={[styles.officialToggle, { borderColor: theme.border, backgroundColor: theme.surface }]}>
             <ThemedText type="smallBold">
               {officialStore ? 'Official PlantCare Store listing' : 'Personal seller listing'}
             </ThemedText>
@@ -139,7 +139,6 @@ export default function CreateShopListingScreen() {
           onChangeText={setTitle}
           placeholder="e.g. Monstera cutting"
           error={errors.title}
-          style={styles.field}
         />
         <TextField
           label="Description"
@@ -148,7 +147,7 @@ export default function CreateShopListingScreen() {
           placeholder="Condition, size, pickup or delivery notes"
           multiline
           numberOfLines={5}
-          style={[styles.field, styles.bodyInput]}
+          style={styles.bodyInput}
           error={errors.description}
         />
         <TextField
@@ -158,7 +157,6 @@ export default function CreateShopListingScreen() {
           placeholder="500"
           keyboardType="numeric"
           error={errors.price}
-          style={styles.field}
         />
         {officialStore ? (
           <TextField
@@ -166,7 +164,6 @@ export default function CreateShopListingScreen() {
             value={quantity}
             onChangeText={setQuantity}
             keyboardType="numeric"
-            style={styles.field}
           />
         ) : null}
 
@@ -180,7 +177,7 @@ export default function CreateShopListingScreen() {
                 onPress={() => setCategory(item)}
                 style={[
                   styles.categoryChip,
-                  { backgroundColor: active ? theme.primary : '#FFFFFF', borderColor: theme.border },
+                  { backgroundColor: active ? theme.primary : theme.surface, borderColor: theme.border },
                 ]}>
                 <ThemedText type="small" style={{ color: active ? theme.onPrimary : theme.textSecondary }}>
                   {item}
@@ -200,7 +197,7 @@ export default function CreateShopListingScreen() {
                 onPress={() => setCondition(item)}
                 style={[
                   styles.categoryChip,
-                  { backgroundColor: active ? theme.primary : '#FFFFFF', borderColor: theme.border },
+                  { backgroundColor: active ? theme.primary : theme.surface, borderColor: theme.border },
                 ]}>
                 <ThemedText type="small" style={{ color: active ? theme.onPrimary : theme.textSecondary }}>
                   {item}
@@ -212,7 +209,7 @@ export default function CreateShopListingScreen() {
 
         <Pressable
           onPress={pickImage}
-          style={[styles.imagePicker, { borderColor: theme.border, backgroundColor: '#FFFFFF' }]}>
+          style={[styles.imagePicker, { borderColor: theme.border, backgroundColor: theme.surface }]}>
           {imageUri ? (
             <Image source={{ uri: imageUri }} style={styles.preview} />
           ) : (
@@ -240,7 +237,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -252,7 +248,6 @@ const styles = StyleSheet.create({
     padding: Spacing.three,
     gap: 4,
   },
-  field: { backgroundColor: '#FFFFFF' },
   bodyInput: {
     minHeight: 120,
     textAlignVertical: 'top',

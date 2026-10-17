@@ -60,7 +60,7 @@ export function ShopBrowsePanel() {
         </Pressable>
       </View>
 
-      <View style={[styles.searchBar, { borderColor: theme.border, backgroundColor: '#FFFFFF' }]}>
+      <View style={[styles.searchBar, { borderColor: theme.border, backgroundColor: theme.surface }]}>
         <Search size={18} color={theme.textSecondary} strokeWidth={1.8} />
         <TextInput
           value={query}
@@ -81,7 +81,7 @@ export function ShopBrowsePanel() {
               onPress={() => setSellerFilter(item)}
               style={[
                 styles.chip,
-                { backgroundColor: active ? theme.primary : '#FFFFFF', borderColor: theme.border },
+                { backgroundColor: active ? theme.primary : theme.surface, borderColor: theme.border },
               ]}>
               <ThemedText type="small" style={{ color: active ? theme.onPrimary : theme.textSecondary }}>
                 {label}
@@ -100,7 +100,7 @@ export function ShopBrowsePanel() {
               onPress={() => setCategory(item)}
               style={[
                 styles.chip,
-                { backgroundColor: active ? theme.primary : '#FFFFFF', borderColor: theme.border },
+                { backgroundColor: active ? theme.primary : theme.surface, borderColor: theme.border },
               ]}>
               <ThemedText type="small" style={{ color: active ? theme.onPrimary : theme.textSecondary }}>
                 {item}
@@ -112,7 +112,7 @@ export function ShopBrowsePanel() {
 
       <View style={styles.list}>
         {filtered.length === 0 ? (
-          <ThemedView type="backgroundElement" style={[styles.empty, { backgroundColor: '#FFFFFF' }]}>
+          <ThemedView type="backgroundElement" style={styles.empty}>
             <ShoppingBag size={28} color={theme.textSecondary} strokeWidth={1.6} />
             <ThemedText type="smallBold">No listings found</ThemedText>
             <ThemedText type="small" themeColor="textSecondary" style={styles.emptyCopy}>
@@ -144,7 +144,7 @@ function ListingCard({ listing, onPress }: { listing: MarketplaceListing; onPres
 
   return (
     <Pressable onPress={onPress}>
-      <ThemedView type="backgroundElement" style={[styles.card, { backgroundColor: '#FFFFFF' }]}>
+      <ThemedView type="backgroundElement" style={styles.card}>
         <View style={styles.cardRow}>
           {imageUri ? (
             <Image source={{ uri: imageUri }} style={styles.thumb} />

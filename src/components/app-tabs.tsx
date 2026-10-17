@@ -6,31 +6,34 @@ import {
   type TabListProps,
   type TabTriggerSlotProps,
 } from 'expo-router/ui';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View, Platform } from 'react-native';
 import { House, Leaf, MessagesSquare, Plus, UserRound, type LucideIcon } from 'lucide-react-native';
 
 import { CardRadius, Colors } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 export default function AppTabs() {
+  const colors = useTheme();
+
   return (
     <Tabs>
       <TabSlot style={styles.slot} />
       <TabList asChild>
         <CustomTabList>
           <TabTrigger name="index" href="/" asChild>
-            <TabButton icon={House} label="Dashboard" />
+            <TabButton icon={House} label="Dashboard" colors={colors} />
           </TabTrigger>
           <TabTrigger name="plants" href="/plants" asChild>
-            <TabButton icon={Leaf} label="Plants" />
+            <TabButton icon={Leaf} label="Plants" colors={colors} />
           </TabTrigger>
           <TabTrigger name="add-plant" href="/add-plant" asChild>
-            <TabButton icon={Plus} label="Add plant" featured />
+            <TabButton icon={Plus} label="Add plant" featured colors={colors} />
           </TabTrigger>
           <TabTrigger name="community" href="/community" asChild>
-            <TabButton icon={MessagesSquare} label="Community" />
+            <TabButton icon={MessagesSquare} label="Community" colors={colors} />
           </TabTrigger>
           <TabTrigger name="profile" href="/profile" asChild>
-            <TabButton icon={UserRound} label="Profile" />
+            <TabButton icon={UserRound} label="Profile" colors={colors} />
           </TabTrigger>
         </CustomTabList>
       </TabList>
@@ -43,35 +46,56 @@ function TabButton({
   label,
   featured = false,
   isFocused,
+  colors,
   ...props
 }: TabTriggerSlotProps & {
   icon: LucideIcon;
   label: string;
   featured?: boolean;
+  colors: typeof Colors[keyof typeof Colors];
 }) {
-  const colors = Colors.light;
-
   return (
     <Pressable
       {...props}
       accessibilityLabel={label}
       style={[styles.tabButton, featured && styles.featuredButton]}>
-      <View style={[featured ? styles.featuredIcon : styles.iconWrap, featured && { backgroundColor: colors.text }]}>
+      <View
+        style={[
+          featured ? styles.featuredIcon : styles.iconWrap,
+          featured && { backgroundColor: colors.primary },
+        ]}>
         <Icon
           size={featured ? 20 : 21}
-          color={featured ? '#CFF27E' : isFocused ? colors.primary : colors.textSecondary}
+          color={featured ? colors.onPrimary : isFocused ? colors.primary : colors.textSecondary}
           strokeWidth={1.8}
         />
       </View>
-      {isFocused && !featured ? <View style={[styles.activeDot, { backgroundColor: colors.primary }]} /> : null}
+      {isFocused && !featured ? (
+        <View style={[styles.activeDot, { backgroundColor: colors.primary }]} />
+      ) : null}
     </Pressable>
   );
 }
 
 function CustomTabList({ style, children, ...props }: TabListProps) {
+  const colors = useTheme();
+
   return (
     <View {...props} style={[style, styles.tabList]} pointerEvents="box-none">
-      <View style={styles.bar} pointerEvents="auto">
+      <View
+        style={[
+          styles.bar,
+          { backgroundColor: colors.surface, borderColor: colors.border },
+          Platform.OS === 'ios' || Platform.OS === 'web'
+            ? {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 8 },
+                shadowOpacity: 0.12,
+                shadowRadius: 20,
+              }
+            : {},
+        ]}
+        pointerEvents="auto">
         {children}
       </View>
     </View>
@@ -96,14 +120,10 @@ const styles = StyleSheet.create({
     height: 64,
     paddingHorizontal: 10,
     borderRadius: CardRadius,
-    backgroundColor: '#FFFFFF',
+    borderWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    shadowColor: '#0E1D15',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 20,
     elevation: 8,
   },
   tabButton: {

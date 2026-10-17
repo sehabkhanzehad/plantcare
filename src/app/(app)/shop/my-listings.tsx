@@ -29,7 +29,7 @@ export default function MyShopListingsScreen() {
   return (
     <Screen scroll padded tabBarInset>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.back}>
+        <Pressable onPress={() => router.back()} style={[styles.back, { backgroundColor: theme.surface }]}>
           <ArrowLeft size={20} color={theme.text} strokeWidth={1.8} />
         </Pressable>
         <View style={styles.headerCopy}>
@@ -108,7 +108,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
@@ -14,13 +14,13 @@ import {
   CalendarDays,
   Check,
   Droplets,
-  FlaskConical,
   Flame,
-  HeartPulse,
+  FlaskConical,
   Plus,
   ShoppingBag,
+  ShoppingCart,
   Sparkles,
-  Sprout,
+  Sun,
   Thermometer,
 } from 'lucide-react-native';
 import Svg, { Circle } from 'react-native-svg';
@@ -32,7 +32,7 @@ import { usePlants } from '@/context/plants';
 import { Screen } from '@/components/ui/screen';
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
-import { useTheme } from '@/hooks/use-theme';
+import { useResolvedColorScheme, useTheme } from '@/hooks/use-theme';
 import {
   addDays,
   buildTodayTasks,
@@ -40,7 +40,6 @@ import {
   getCareTip,
   isCarePaused,
   wateringStreak,
-  weeklyCareChart,
   weeklyCareTotal,
   weeklyLogDelta,
   type CareTask,
@@ -52,6 +51,7 @@ const DEFAULT_PLANT_IMAGE =
 
 export default function DashboardScreen() {
   const theme = useTheme();
+  const isDark = useResolvedColorScheme() === 'dark';
   const { plants, careLogs, growthEntries, waterPlant, logCare } = usePlants();
   const { listings } = useMarketplace();
   const { unreadCount } = useNotifications();
@@ -61,6 +61,7 @@ export default function DashboardScreen() {
     Manrope_700Bold,
     Manrope_800ExtraBold,
   });
+  const [range, setRange] = useState<'week' | 'month'>('week');
 
   const today = dateKey(new Date());
   const tasks = useMemo(() => buildTodayTasks(plants, today), [plants, today]);
@@ -82,13 +83,67 @@ export default function DashboardScreen() {
     month: 'short',
   });
 
-  const streak = wateringStreak(careLogs);
-  const weekBars = weeklyCareChart(careLogs);
-  const maxBar = Math.max(...weekBars.map((b) => b.count), 1);
-  const weekTotal = weeklyCareTotal(careLogs);
   const weekDelta = weeklyLogDelta(careLogs);
+  const streak = wateringStreak(careLogs);
+  const weekTotal = weeklyCareTotal(careLogs);
   const tip = getCareTip(plants);
   const pausedCount = plants.filter((p) => isCarePaused(p, today)).length;
+
+  const careWeek = useMemo(() => {
+    const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const now = new Date();
+    const todayIndex = (now.getDay() + 6) % 7;
+    const monday = new Date(now);
+    monday.setHours(0, 0, 0, 0);
+    monday.setDate(now.getDate() - todayIndex);
+    return labels.map((day, index) => {
+      const date = new Date(monday);
+      date.setDate(monday.getDate() + index);
+      const key = dateKey(date);
+      return {
+        day,
+        count: careLogs.filter((log) => log.completedAt.startsWith(key)).length,
+        isToday: index === todayIndex,
+        isFuture: index > todayIndex,
+      };
+    });
+  }, [careLogs]);
+
+  const careMonth = useMemo(() => {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const todayIndex = (now.getDay() + 6) % 7;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - todayIndex);
+    return [3, 2, 1, 0].map((offset) => {
+      const start = new Date(monday);
+      start.setDate(monday.getDate() - offset * 7);
+      const end = new Date(start);
+      end.setDate(start.getDate() + 6);
+      const startKey = dateKey(start);
+      const endKey = dateKey(end);
+      return {
+        day: `W${4 - offset}`,
+        count: careLogs.filter((log) => {
+          const d = log.completedAt.split('T')[0];
+          return d >= startKey && d <= endKey;
+        }).length,
+        isToday: offset === 0,
+        isFuture: false,
+      };
+    });
+  }, [careLogs]);
+
+  const monthTotal = useMemo(() => {
+    const now = new Date();
+    const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    return careLogs.filter((log) => log.completedAt.startsWith(ym)).length;
+  }, [careLogs]);
+
+  const chartData = range === 'week' ? careWeek : careMonth;
+  const chartMax = Math.max(...chartData.map((d) => d.count), 1);
+  const rangeTotal = range === 'week' ? weekTotal : monthTotal;
+  const rangeLabel = range === 'week' ? 'tasks this week' : 'tasks this month';
 
   const recentGrowth = useMemo(() => {
     const cutoff = addDays(today, -14);
@@ -177,19 +232,26 @@ export default function DashboardScreen() {
         style={styles.bodyScroll}
         contentContainerStyle={styles.bodyContent}
         showsVerticalScrollIndicator={false}>
-        <View style={[styles.hero, { backgroundColor: theme.heroBackground }]}>
+        <View
+          style={[
+            styles.hero,
+            {
+              backgroundColor: isDark ? theme.surface : theme.heroBackground,
+              borderColor: isDark ? theme.border : 'rgba(255,255,255,0.12)',
+            },
+          ]}>
           <View style={styles.heroHeader}>
             <ThemedText style={styles.heroTitle}>Garden health</ThemedText>
             {weekDelta !== null ? (
               <Pill
                 text={`${weekDelta >= 0 ? '+' : ''}${weekDelta}% this week`}
                 accent={theme.accent}
-                ink={theme.heroBackground}
+                ink={isDark ? theme.primary : theme.heroBackground}
               />
             ) : null}
           </View>
           <View style={styles.heroContent}>
-            <HealthRing score={health} accent={theme.accent} track="#2B4A39" />
+            <HealthRing score={health} accent={theme.accent} track="rgba(255,255,255,0.15)" />
             <View style={styles.healthRows}>
               <HealthRow label="Thriving" value={healthy} muted={theme.heroMuted} />
               <HealthRow
@@ -206,42 +268,34 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        <View style={[styles.overview, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-          <View style={styles.overviewHeader}>
-            <View>
-              <ThemedText style={styles.overviewTitle}>Garden overview</ThemedText>
-            </View>
-            <View style={[styles.overviewDot, { backgroundColor: theme.primary }]} />
-          </View>
-          <View style={[styles.overviewRow, { borderBottomColor: theme.border }]}>
-            <StatMetric icon={Thermometer} label="Temperature" value="24°C" iconColor="#C47E0A" theme={theme} />
-            <StatMetric icon={Droplets} label="Humidity" value="62%" iconColor="#2F6F8F" theme={theme} />
-            <StatMetric icon={Sprout} label="Total plants" value={String(plants.length)} iconColor={theme.primary} theme={theme} />
-            <StatMetric icon={HeartPulse} label="Garden health" value={`${health}%`} iconColor={theme.statusHealthy} theme={theme} />
-          </View>
-          <View style={styles.overviewRow}>
-            <StatMetric icon={CalendarDays} label="Due today" value={String(tasks.length)} iconColor={theme.statusAttention} theme={theme} />
-            <StatMetric icon={Flame} label="Care this week" value={String(weekTotal)} iconColor="#C47E0A" theme={theme} />
-            <StatMetric icon={ShoppingBag} label="Listings" value={String(activeListings)} iconColor={theme.primary} theme={theme} />
-            <StatMetric icon={Flame} label="Water streak" value={`${streak.current}d`} iconColor="#B96B16" theme={theme} />
-          </View>
+        <View style={styles.envRow}>
+          <EnvCard icon={Thermometer} value="26°C" label="Indoor" theme={theme} />
+          <EnvCard icon={Droplets} value="68%" label="Humidity" theme={theme} />
+          <EnvCard icon={Sun} value="Low" label="Light" theme={theme} />
         </View>
 
         {activeListings > 0 ? (
-          <Pressable
-            onPress={() => router.push({ pathname: '/community', params: { segment: 'shop' } })}
-            style={[styles.shopCard, { backgroundColor: theme.text }]}>
-            <View style={[styles.shopIcon, { backgroundColor: theme.heroBackground }]}>
-              <ShoppingBag size={22} color={theme.accent} strokeWidth={1.8} />
-            </View>
-            <View style={styles.shopCopy}>
-              <ThemedText style={styles.shopTitle}>Buy & sell plants</ThemedText>
-              <ThemedText style={[styles.shopSubtitle, { color: theme.heroMuted }]}>
-                {activeListings} active listing{activeListings === 1 ? '' : 's'}
-              </ThemedText>
-            </View>
-            <ThemedText style={[styles.shopCta, { color: theme.accent }]}>Open</ThemedText>
-          </Pressable>
+          <>
+            <View style={[styles.divider, { backgroundColor: theme.border }]} />
+            <Pressable
+              onPress={() => router.push({ pathname: '/community', params: { segment: 'shop' } })}
+              style={[styles.shopCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+              <View style={[styles.shopIcon, { backgroundColor: `${theme.primary}18` }]}>
+                <ShoppingBag size={22} color={theme.primary} strokeWidth={1.8} />
+              </View>
+              <View style={styles.shopCopy}>
+                <ThemedText style={[styles.shopTitle, { color: theme.text }]}>Buy & sell plants</ThemedText>
+                <ThemedText style={[styles.shopSubtitle, { color: theme.textSecondary }]}>
+                  {activeListings} active listing{activeListings === 1 ? '' : 's'}
+                </ThemedText>
+              </View>
+              <View style={[styles.shopButton, { backgroundColor: theme.primary }]}>
+                <ShoppingCart size={15} color={theme.onPrimary} strokeWidth={2} />
+                <ThemedText style={[styles.shopButtonText, { color: theme.onPrimary }]}>Buy</ThemedText>
+              </View>
+            </Pressable>
+            <View style={[styles.divider, { backgroundColor: theme.border }]} />
+          </>
         ) : null}
 
         <SectionHeader
@@ -272,44 +326,61 @@ export default function DashboardScreen() {
         <View style={[styles.analytics, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <View style={styles.analyticsTop}>
             <View>
-              <ThemedText style={styles.analyticsTitle}>Care completed</ThemedText>
+              <ThemedText style={[styles.analyticsTitle, { color: theme.text }]}>
+                Care completed
+              </ThemedText>
               <View style={styles.analyticsValueRow}>
-                <ThemedText style={[styles.analyticsValue, { color: theme.text }]}>{weekTotal}</ThemedText>
-                <ThemedText style={[styles.analyticsSubtitle, { color: theme.textSecondary }]}>
-                  tasks this week
+                <ThemedText style={[styles.analyticsValue, { color: theme.text }]}>{rangeTotal}</ThemedText>
+                <ThemedText style={[styles.analyticsSubtitle, { color: theme.textSecondary }]} numberOfLines={1}>
+                  {rangeLabel}
                 </ThemedText>
               </View>
             </View>
+            <View style={[styles.segment, { backgroundColor: theme.background }]}>
+              {(['week', 'month'] as const).map((item) => {
+                const active = range === item;
+                return (
+                  <Pressable
+                    key={item}
+                    onPress={() => setRange(item)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: active }}
+                    style={[styles.segmentItem, active && { backgroundColor: theme.primary }]}>
+                    <ThemedText
+                      style={[styles.segmentText, { color: active ? theme.onPrimary : theme.textSecondary }]}>
+                      {item === 'week' ? 'Week' : 'Month'}
+                    </ThemedText>
+                  </Pressable>
+                );
+              })}
+            </View>
           </View>
           <View style={styles.chart}>
-            {weekBars.map((item) => {
-              const height = Math.max(8, (item.count / maxBar) * 100);
-              return (
-                <View key={item.day} style={styles.barColumn}>
-                  <View
-                    style={[
-                      styles.bar,
-                      {
-                        height,
-                        backgroundColor: item.isToday ? theme.primary : theme.primaryMuted,
-                      },
-                    ]}
-                  />
-                  <ThemedText
-                    style={[
-                      styles.barLabel,
-                      { color: theme.textSecondary },
-                      item.isToday && { color: theme.primary, fontFamily: 'Manrope_700Bold' },
-                    ]}>
-                    {item.day}
-                  </ThemedText>
-                </View>
-              );
-            })}
+            {chartData.map((item) => (
+              <View key={item.day} style={styles.barColumn}>
+                <View
+                  style={[
+                    styles.bar,
+                    item.isFuture
+                      ? [styles.futureBar, { borderColor: theme.border }]
+                      : { backgroundColor: item.isToday ? theme.primary : theme.primaryMuted },
+                    { height: item.isFuture ? 28 : Math.max(8, (item.count / chartMax) * 76) },
+                  ]}
+                />
+                <ThemedText
+                  style={[
+                    styles.barLabel,
+                    { color: theme.textSecondary },
+                    item.isToday && { color: theme.primary, fontWeight: '700' },
+                  ]}>
+                  {item.day}
+                </ThemedText>
+              </View>
+            ))}
           </View>
-          <View style={[styles.streak, { backgroundColor: theme.background }]}>
+          <View style={[styles.streak, { backgroundColor: `${theme.statusAttention}14` }]}>
             <Flame size={18} color={theme.statusAttention} />
-            <ThemedText style={styles.streakText}>
+            <ThemedText style={[styles.streakText, { color: theme.text }]}>
               {streak.current}-day watering streak
             </ThemedText>
             <ThemedText style={[styles.best, { color: theme.statusAttention }]}>
@@ -418,33 +489,25 @@ function Pill({ text, accent, ink }: { text: string; accent: string; ink: string
   );
 }
 
-function StatMetric({
+function EnvCard({
   icon: Icon,
-  label,
   value,
-  iconColor,
+  label,
   theme,
 }: {
   icon: typeof Thermometer;
-  label: string;
   value: string;
-  iconColor: string;
+  label: string;
   theme: ReturnType<typeof useTheme>;
 }) {
   return (
-    <View
-      style={[
-        styles.statMetric,
-        { borderRightColor: theme.border },
-      ]}>
-      <View style={styles.statMetricInner}>
-        <View style={styles.statValueRow}>
-          <View style={[styles.statIcon, { backgroundColor: `${iconColor}18` }]}>
-            <Icon size={13} color={iconColor} strokeWidth={2} />
-          </View>
-          <ThemedText style={[styles.statValue, { color: theme.text }]}>{value}</ThemedText>
-        </View>
-        <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]} numberOfLines={1}>
+    <View style={[styles.envCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+      <Icon size={19} color={theme.primary} strokeWidth={1.9} />
+      <View style={styles.envCopy}>
+        <ThemedText style={[styles.envValue, { color: theme.text }]} numberOfLines={1}>
+          {value}
+        </ThemedText>
+        <ThemedText style={[styles.envLabel, { color: theme.textSecondary }]} numberOfLines={1}>
           {label}
         </ThemedText>
       </View>
@@ -562,44 +625,32 @@ const styles = StyleSheet.create({
   },
   bodyScroll: { flex: 1 },
   bodyContent: { paddingBottom: BottomTabInset + Spacing.five },
-  hero: { borderRadius: CardRadius, paddingHorizontal: 22, paddingTop: 20, paddingBottom: 17, marginBottom: 22 },
+  envRow: { flexDirection: 'row', gap: 9, marginBottom: 12 },
+  envCard: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 9,
+    paddingVertical: 15,
+    paddingHorizontal: 13,
+    borderRadius: 18,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  envCopy: { flex: 1, minWidth: 0 },
+  envValue: { fontFamily: 'Manrope_800ExtraBold', fontSize: 15, lineHeight: 19 },
+  envLabel: { fontFamily: 'Manrope_500Medium', fontSize: 10.5, marginTop: 1 },
+  hero: {
+    borderRadius: CardRadius,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.12)',
+    paddingHorizontal: 22,
+    paddingTop: 20,
+    paddingBottom: 17,
+    marginBottom: 12,
+  },
   heroHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   heroTitle: { color: '#FFFFFF', fontFamily: 'Manrope_600SemiBold', fontSize: 14 },
   heroContent: { flexDirection: 'row', alignItems: 'center', gap: 22 },
-  overview: {
-    borderRadius: CardRadius,
-    borderWidth: StyleSheet.hairlineWidth,
-    marginBottom: 22,
-    overflow: 'hidden',
-  },
-  overviewHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 11,
-  },
-  overviewTitle: { fontFamily: 'Manrope_700Bold', fontSize: 14 },
-  overviewDot: { width: 7, height: 7, borderRadius: 4 },
-  overviewRow: {
-    flexDirection: 'row',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  statMetric: {
-    width: '25%',
-    minHeight: 72,
-    borderRightWidth: StyleSheet.hairlineWidth,
-  },
-  statMetricInner: {
-    flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 8,
-    alignItems: 'flex-start',
-  },
-  statValueRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  statIcon: { width: 20, height: 20, borderRadius: 6, alignItems: 'center', justifyContent: 'center' },
-  statValue: { fontFamily: 'Manrope_800ExtraBold', fontSize: 14, lineHeight: 18 },
-  statLabel: { fontFamily: 'Manrope_600SemiBold', fontSize: 8, marginTop: 2 },
   pill: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },
   pillText: { fontFamily: 'Manrope_700Bold', fontSize: 10 },
   ring: { width: 112, height: 112, alignItems: 'center', justifyContent: 'center' },
@@ -607,15 +658,24 @@ const styles = StyleSheet.create({
   score: { color: '#FFFFFF', fontFamily: 'Manrope_800ExtraBold', fontSize: 28, lineHeight: 30 },
   outOf: { color: '#B9C7BD', fontFamily: 'Manrope_500Medium', fontSize: 9 },
   healthRows: { flex: 1 },
-  healthRow: { flexDirection: 'row', alignItems: 'center', minHeight: 39, borderTopWidth: 1, borderTopColor: '#294637' },
+  healthRow: { flexDirection: 'row', alignItems: 'center', minHeight: 39, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)' },
   healthLabel: { flex: 1, color: '#FFFFFF', fontFamily: 'Manrope_600SemiBold', fontSize: 12 },
   healthValue: { fontFamily: 'Manrope_500Medium', fontSize: 12 },
-  shopCard: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: CardRadius, padding: 16, marginBottom: 22 },
+  shopCard: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: CardRadius, padding: 16, marginBottom: 12, marginTop: 0 },
   shopIcon: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   shopCopy: { flex: 1, gap: 2 },
-  shopTitle: { color: '#FFFFFF', fontFamily: 'Manrope_700Bold', fontSize: 15 },
+  shopTitle: { fontFamily: 'Manrope_700Bold', fontSize: 15 },
   shopSubtitle: { fontFamily: 'Manrope_500Medium', fontSize: 11 },
-  shopCta: { fontFamily: 'Manrope_700Bold', fontSize: 12 },
+  shopButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 999,
+  },
+  shopButtonText: { fontFamily: 'Manrope_700Bold', fontSize: 12 },
+  divider: { height: StyleSheet.hairlineWidth, marginBottom: 12 },
   taskList: { gap: 8, marginBottom: 22 },
   emptyTasks: {
     borderWidth: StyleSheet.hairlineWidth,
@@ -643,19 +703,43 @@ const styles = StyleSheet.create({
   analytics: {
     borderRadius: CardRadius,
     borderWidth: StyleSheet.hairlineWidth,
-    padding: 20,
+    padding: 16,
     marginBottom: 22,
   },
-  analyticsTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
+  analyticsTop: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+  },
   analyticsTitle: { fontFamily: 'Manrope_600SemiBold', fontSize: 14 },
+  segment: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 999,
+    padding: 3,
+  },
+  segmentItem: {
+    paddingHorizontal: 13,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  segmentText: { fontFamily: 'Manrope_600SemiBold', fontSize: 10 },
   analyticsValueRow: { flexDirection: 'row', alignItems: 'baseline', gap: 7, marginTop: 2 },
   analyticsValue: { fontFamily: 'Manrope_800ExtraBold', fontSize: 32, lineHeight: 38 },
   analyticsSubtitle: { fontFamily: 'Manrope_500Medium', fontSize: 12 },
-  chart: { height: 120, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 18 },
-  barColumn: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', height: 120, gap: 7 },
-  bar: { width: 28, maxWidth: '78%', borderRadius: 9 },
+  chart: { height: 110, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 12 },
+  barColumn: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', height: 110, gap: 5 },
+  bar: { width: 34, maxWidth: '78%', borderRadius: 9 },
+  futureBar: { backgroundColor: 'transparent', borderWidth: 1, borderStyle: 'dashed' },
   barLabel: { fontFamily: 'Manrope_500Medium', fontSize: 9 },
-  streak: { marginTop: 16, borderRadius: CardRadius, padding: 11, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  streak: {
+    marginTop: 12,
+    borderRadius: CardRadius,
+    padding: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   streakText: { flex: 1, fontFamily: 'Manrope_600SemiBold', fontSize: 11 },
   best: { fontFamily: 'Manrope_600SemiBold', fontSize: 10 },
   plantsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
@@ -665,23 +749,24 @@ const styles = StyleSheet.create({
   plantScroller: { flexDirection: 'row', gap: 8, paddingBottom: 16 },
   plantCard: {
     flex: 1,
-    borderRadius: CardRadius,
+    borderRadius: 18,
     borderWidth: StyleSheet.hairlineWidth,
     padding: 8,
   },
   addPlantCard: {
-    width: 88,
-    borderRadius: CardRadius,
-    borderWidth: StyleSheet.hairlineWidth,
+    flex: 1,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderStyle: 'dashed',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
   },
-  plantImage: { width: '100%', height: 108, borderRadius: 15 },
-  plantName: { fontFamily: 'Manrope_700Bold', fontSize: 13, marginTop: 8 },
-  statusLine: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 5 },
-  statusDot: { width: 6, height: 6, borderRadius: 3 },
-  plantStatus: { fontFamily: 'Manrope_500Medium', fontSize: 10 },
+  plantImage: { width: '100%', height: 84, borderRadius: 13 },
+  plantName: { fontFamily: 'Manrope_700Bold', fontSize: 13, lineHeight: 17, marginTop: 6 },
+  statusLine: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
+  statusDot: { width: 5, height: 5, borderRadius: 3 },
+  plantStatus: { fontFamily: 'Manrope_500Medium', fontSize: 10, lineHeight: 13 },
   emptyGarden: {
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: CardRadius,

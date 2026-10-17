@@ -72,7 +72,7 @@ export default function CreateCommunityPostScreen() {
   return (
     <Screen scroll padded>
       <View style={styles.header}>
-        <Pressable accessibilityLabel="Go back" onPress={() => router.back()} style={styles.back}>
+        <Pressable accessibilityLabel="Go back" onPress={() => router.back()} style={[styles.back, { backgroundColor: theme.surface }]}>
           <ArrowLeft size={20} color={theme.text} strokeWidth={1.8} />
         </Pressable>
         <View style={styles.headerCopy}>
@@ -90,7 +90,6 @@ export default function CreateCommunityPostScreen() {
           onChangeText={setTitle}
           placeholder="e.g. Yellow spots on Monstera"
           error={errors.title}
-          style={styles.field}
         />
         <TextField
           label="Details"
@@ -99,7 +98,7 @@ export default function CreateCommunityPostScreen() {
           placeholder="Describe what you see and what you’ve tried"
           multiline
           numberOfLines={5}
-          style={[styles.field, styles.bodyInput]}
+          style={styles.bodyInput}
           error={errors.body}
         />
 
@@ -116,7 +115,7 @@ export default function CreateCommunityPostScreen() {
                 style={[
                   styles.categoryChip,
                   {
-                    backgroundColor: active ? theme.primary : '#FFFFFF',
+                    backgroundColor: active ? theme.primary : theme.surface,
                     borderColor: theme.border,
                   },
                 ]}>
@@ -130,7 +129,7 @@ export default function CreateCommunityPostScreen() {
 
         <Pressable
           onPress={pickImage}
-          style={[styles.imagePicker, { borderColor: theme.border, backgroundColor: '#FFFFFF' }]}>
+          style={[styles.imagePicker, { borderColor: theme.border, backgroundColor: theme.surface }]}>
           {imageUri ? (
             <Image source={{ uri: imageUri }} style={styles.preview} />
           ) : (
@@ -160,7 +159,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -171,9 +169,6 @@ const styles = StyleSheet.create({
   form: {
     gap: Spacing.three,
     paddingBottom: Spacing.five,
-  },
-  field: {
-    backgroundColor: '#FFFFFF',
   },
   bodyInput: {
     minHeight: 120,

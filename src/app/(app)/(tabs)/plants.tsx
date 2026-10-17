@@ -44,7 +44,7 @@ export default function PlantsScreen() {
             <ThemedText style={[styles.countText, { color: theme.primary }]}>{plants.length}</ThemedText>
           </View>
         </View>
-        <View style={[styles.searchBar, { backgroundColor: '#FFFFFF', borderColor: theme.border }]}>
+        <View style={[styles.searchBar, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <Search size={19} color={theme.textSecondary} strokeWidth={1.8} />
           <TextInput
             value={query}
@@ -65,7 +65,10 @@ export default function PlantsScreen() {
                 onPress={() => setFilter(item)}
                 style={[
                   styles.filter,
-                  { backgroundColor: filter === item ? theme.primary : '#FFFFFF' },
+                  {
+                    backgroundColor: filter === item ? theme.primary : theme.surface,
+                    borderColor: filter === item ? theme.primary : theme.border,
+                  },
                 ]}>
                 <ThemedText type="small" style={{ color: filter === item ? theme.onPrimary : theme.textSecondary }}>
                   {item === 'Needs Attention' ? 'Needs care' : item}
@@ -73,7 +76,7 @@ export default function PlantsScreen() {
               </Pressable>
             ))}
           </View>
-          <View style={styles.viewToggle}>
+          <View style={[styles.viewToggle, { backgroundColor: theme.surface }]}>
             <Pressable onPress={() => setViewMode('grid')} accessibilityLabel="Grid view" style={[styles.viewButton, viewMode === 'grid' && { backgroundColor: theme.primary }]}>
               <Grid2X2 size={17} color={viewMode === 'grid' ? theme.onPrimary : theme.textSecondary} />
             </Pressable>
@@ -398,12 +401,10 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.one,
     borderRadius: Spacing.four,
     borderWidth: 1,
-    borderColor: '#E1E5E2',
   },
   viewToggle: {
     alignSelf: 'flex-end',
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 3,
     gap: 2,

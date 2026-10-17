@@ -75,15 +75,15 @@ export default function CommunityPostDetailScreen() {
   return (
     <Screen scroll padded>
       <View style={styles.topBar}>
-        <Pressable accessibilityLabel="Go back" onPress={() => router.back()} style={styles.iconButton}>
+        <Pressable accessibilityLabel="Go back" onPress={() => router.back()} style={[styles.iconButton, { backgroundColor: theme.surface }]}>
           <ArrowLeft size={20} color={theme.text} strokeWidth={1.8} />
         </Pressable>
-        <Pressable accessibilityLabel="Report post" onPress={onReport} style={styles.iconButton}>
+        <Pressable accessibilityLabel="Report post" onPress={onReport} style={[styles.iconButton, { backgroundColor: theme.surface }]}>
           <Flag size={18} color={post.reported ? theme.danger : theme.textSecondary} strokeWidth={1.8} />
         </Pressable>
       </View>
 
-      <ThemedView type="backgroundElement" style={[styles.card, { backgroundColor: '#FFFFFF' }]}>
+      <ThemedView type="backgroundElement" style={styles.card}>
         <View style={styles.metaRow}>
           <View style={[styles.avatar, { backgroundColor: `${theme.primary}18` }]}>
             <ThemedText type="smallBold" style={{ color: theme.primary }}>
@@ -143,7 +143,7 @@ export default function CommunityPostDetailScreen() {
 
       <View style={styles.comments}>
         {comments.length === 0 ? (
-          <ThemedView type="backgroundElement" style={[styles.empty, { backgroundColor: '#FFFFFF' }]}>
+          <ThemedView type="backgroundElement" style={styles.empty}>
             <ThemedText type="small" themeColor="textSecondary">
               No answers yet. Share what has worked for you.
             </ThemedText>
@@ -157,7 +157,7 @@ export default function CommunityPostDetailScreen() {
                 type="backgroundElement"
                 style={[
                   styles.comment,
-                  { backgroundColor: '#FFFFFF', borderColor: accepted ? theme.primary : 'transparent' },
+                  { backgroundColor: theme.surface, borderColor: accepted ? theme.primary : 'transparent' },
                   accepted && styles.acceptedComment,
                 ]}>
                 <View style={styles.commentTop}>
@@ -189,7 +189,7 @@ export default function CommunityPostDetailScreen() {
         )}
       </View>
 
-      <ThemedView type="backgroundElement" style={[styles.composer, { backgroundColor: '#FFFFFF' }]}>
+      <ThemedView type="backgroundElement" style={styles.composer}>
         <ThemedText type="smallBold">Your answer</ThemedText>
         <TextInput
           value={answer}
@@ -218,7 +218,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
   },

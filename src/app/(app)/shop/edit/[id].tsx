@@ -130,28 +130,27 @@ function EditListingForm({ listing, user }: { listing: MarketplaceListing; user:
   return (
     <Screen scroll padded>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.back}>
+        <Pressable onPress={() => router.back()} style={[styles.back, { backgroundColor: theme.surface }]}>
           <ArrowLeft size={20} color={theme.text} strokeWidth={1.8} />
         </Pressable>
         <ThemedText type="subtitle">Edit listing</ThemedText>
       </View>
 
       <View style={styles.form}>
-        <TextField label="Title" value={title} onChangeText={setTitle} style={styles.field} />
+        <TextField label="Title" value={title} onChangeText={setTitle} />
         <TextField
           label="Description"
           value={description}
           onChangeText={setDescription}
           multiline
           numberOfLines={5}
-          style={[styles.field, styles.bodyInput]}
+          style={styles.bodyInput}
         />
         <TextField
           label="Price (BDT)"
           value={price}
           onChangeText={setPrice}
           keyboardType="numeric"
-          style={styles.field}
         />
         {(listing.isOfficialStore || listing.sellerId === PLANTCARE_STORE_ID) ? (
           <TextField
@@ -159,7 +158,6 @@ function EditListingForm({ listing, user }: { listing: MarketplaceListing; user:
             value={quantity}
             onChangeText={setQuantity}
             keyboardType="numeric"
-            style={styles.field}
           />
         ) : null}
 
@@ -173,7 +171,7 @@ function EditListingForm({ listing, user }: { listing: MarketplaceListing; user:
                 onPress={() => setCategory(item)}
                 style={[
                   styles.categoryChip,
-                  { backgroundColor: active ? theme.primary : '#FFFFFF', borderColor: theme.border },
+                  { backgroundColor: active ? theme.primary : theme.surface, borderColor: theme.border },
                 ]}>
                 <ThemedText type="small" style={{ color: active ? theme.onPrimary : theme.textSecondary }}>
                   {item}
@@ -193,7 +191,7 @@ function EditListingForm({ listing, user }: { listing: MarketplaceListing; user:
                 onPress={() => setCondition(item)}
                 style={[
                   styles.categoryChip,
-                  { backgroundColor: active ? theme.primary : '#FFFFFF', borderColor: theme.border },
+                  { backgroundColor: active ? theme.primary : theme.surface, borderColor: theme.border },
                 ]}>
                 <ThemedText type="small" style={{ color: active ? theme.onPrimary : theme.textSecondary }}>
                   {item}
@@ -205,7 +203,7 @@ function EditListingForm({ listing, user }: { listing: MarketplaceListing; user:
 
         <Pressable
           onPress={pickImage}
-          style={[styles.imagePicker, { borderColor: theme.border, backgroundColor: '#FFFFFF' }]}>
+          style={[styles.imagePicker, { borderColor: theme.border, backgroundColor: theme.surface }]}>
           {imageUri ? (
             <Image source={{ uri: imageUri }} style={styles.preview} />
           ) : (
@@ -234,12 +232,10 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
   form: { gap: Spacing.three, paddingBottom: Spacing.five },
-  field: { backgroundColor: '#FFFFFF' },
   bodyInput: {
     minHeight: 120,
     textAlignVertical: 'top',
