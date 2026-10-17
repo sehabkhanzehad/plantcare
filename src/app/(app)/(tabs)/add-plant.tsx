@@ -1,5 +1,5 @@
-import { useCallback, useState } from 'react';
-import { Image, Pressable, StyleSheet, Switch, View } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { Image, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { SymbolView } from 'expo-symbols';
@@ -10,6 +10,11 @@ import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
 import { usePlants } from '@/context/plants';
+import {
+  PLANT_TYPE_CATALOG,
+  searchCatalog,
+  type PlantTypeCatalogEntry,
+} from '@/constants/plant-type-catalog';
 import { CardRadius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -59,6 +64,20 @@ function PlantForm({ editId }: { editId?: string }) {
   const [errors, setErrors] = useState<{ name?: string; type?: string; frequency?: string }>({});
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
+  const [catalogQuery, setCatalogQuery] = useState('');
+  const [customType, setCustomType] = useState(false);
+  const catalogMatches = useMemo(() => searchCatalog(catalogQuery), [catalogQuery]);
+
+  function applyCatalog(entry: PlantTypeCatalogEntry) {
+    setCustomType(false);
+    setName(name.trim() ? name : entry.name);
+    setType(entry.name);
+    setFrequency(String(entry.wateringFrequencyDays));
+    setFertilizingFrequency(String(entry.fertilizingFrequencyDays));
+    setLight(entry.lightRequirement);
+    setPetSafe(entry.petSafe);
+    setCatalogQuery('');
+  }
 
   useFocusEffect(
     useCallback(() => {
@@ -206,14 +225,58 @@ function PlantForm({ editId }: { editId?: string }) {
           autoCapitalize="words"
           error={errors.name}
         />
+        <ThemedText type="smallBold">Plant type</ThemedText>
         <TextField
-          label="Type"
-          placeholder="e.g. Tropical"
-          value={type}
-          onChangeText={setType}
-          autoCapitalize="words"
-          error={errors.type}
+          label="Search catalog"
+          placeholder="Monstera, Snake Plant…"
+          value={catalogQuery}
+          onChangeText={setCatalogQuery}
         />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.catalogScroll}>
+          <View style={styles.catalogRow}>
+            {catalogMatches.slice(0, 12).map((entry) => {
+              const active = type === entry.name && !customType;
+              return (
+                <Pressable
+                  key={entry.id}
+                  onPress={() => applyCatalog(entry)}
+                  style={[
+                    styles.catalogChip,
+                    { borderColor: theme.border, backgroundColor: active ? `${theme.primary}18` : theme.background },
+                  ]}>
+                  <ThemedText type="smallBold" themeColor={active ? 'primary' : 'text'}>
+                    {entry.name}
+                  </ThemedText>
+                </Pressable>
+              );
+            })}
+            <Pressable
+              onPress={() => {
+                setCustomType(true);
+                setType('');
+              }}
+              style={[styles.catalogChip, { borderColor: theme.border, backgroundColor: customType ? `${theme.primary}18` : theme.background }]}>
+              <ThemedText type="smallBold" themeColor={customType ? 'primary' : 'text'}>Custom</ThemedText>
+            </Pressable>
+          </View>
+        </ScrollView>
+        {customType ? (
+          <TextField
+            label="Custom type"
+            placeholder="e.g. Tropical hybrid"
+            value={type}
+            onChangeText={setType}
+            autoCapitalize="words"
+            error={errors.type}
+          />
+        ) : (
+          <ThemedText type="small" themeColor="textSecondary">
+            {type ? `Selected: ${type}` : `Pick from ${PLANT_TYPE_CATALOG.length} common types`}
+          </ThemedText>
+        )}
+        {!customType && errors.type ? (
+          <ThemedText type="small" style={{ color: theme.danger }}>{errors.type}</ThemedText>
+        ) : null}
         <TextField
           label="Nickname"
           placeholder="e.g. Mona"
@@ -391,5 +454,19 @@ const styles = StyleSheet.create({
   switchText: {
     flex: 1,
     gap: Spacing.one,
+  },
+  catalogScroll: {
+    marginVertical: Spacing.one,
+  },
+  catalogRow: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+    paddingRight: Spacing.two,
+  },
+  catalogChip: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
   },
 });

@@ -2,6 +2,8 @@ import { createContext, useContext, useCallback, useMemo, type PropsWithChildren
 
 import { useStorageState } from '@/hooks/use-storage-state';
 import type { CareStatus } from '@/constants/mock-data';
+import { cancelPlantNotifications } from '@/lib/care-notifications';
+import { getCareStatus } from '@/lib/care';
 
 export type Plant = {
   id: string;
@@ -21,6 +23,7 @@ export type Plant = {
   acquisitionDate?: string;
   petSafe?: boolean;
   reminderEnabled?: boolean;
+  carePausedUntil?: string;
   image?: string;
   notes?: string;
   createdAt: string;
@@ -72,12 +75,7 @@ function todayISO() {
 }
 
 export function getPlantStatus(plant: Plant): CareStatus {
-  const elapsed = Math.floor(
-    (Date.now() - new Date(`${plant.lastWatered}T00:00:00`).getTime()) / 86400000,
-  );
-  if (elapsed > plant.wateringFrequency + 2) return 'Overdue';
-  if (elapsed > plant.wateringFrequency) return 'Needs Attention';
-  return 'Healthy';
+  return getCareStatus(plant);
 }
 
 export function usePlants() {
@@ -147,6 +145,7 @@ export function PlantsProvider({ children }: PropsWithChildren) {
 
   const deletePlant = useCallback(
     (id: string) => {
+      cancelPlantNotifications(id).catch(() => undefined);
       setPlants(plants.filter((p) => p.id !== id));
       setLogsRaw(JSON.stringify(careLogs.filter((log) => log.plantId !== id)));
       setGrowthRaw(JSON.stringify(growthEntries.filter((entry) => entry.plantId !== id)));

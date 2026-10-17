@@ -19,9 +19,13 @@ import {
 
 import { ThemedText } from '@/components/themed-text';
 import { Screen } from '@/components/ui/screen';
+import { useAppearanceOptional, type AppearanceMode } from '@/context/appearance';
+import { useCarePreferences } from '@/context/care-preferences';
 import { useSession } from '@/context/auth';
 import { usePlants } from '@/context/plants';
 import { CardRadius, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
+import { ensureNotificationPermissions } from '@/lib/care-notifications';
 
 const INK = '#0E1D15';
 const MUTED = '#6B776F';
@@ -32,9 +36,16 @@ const ACCENT = '#CFF27E';
 const LINE = '#E6EBE6';
 const DANGER = '#B42318';
 
+const REMINDER_HOURS = [7, 8, 9, 12, 18, 20];
+
 export default function ProfileScreen() {
+  const theme = useTheme();
   const { user, signOut, updateProfile } = useSession();
   const { plants } = usePlants();
+  const appearance = useAppearanceOptional();
+  const mode = appearance?.mode ?? 'system';
+  const setMode = appearance?.setMode ?? (() => undefined);
+  const { reminderHour, setReminderTime } = useCarePreferences();
   const [fontsLoaded] = useFonts({
     Manrope_500Medium,
     Manrope_600SemiBold,
@@ -128,7 +139,61 @@ export default function ProfileScreen() {
         <Stat value={String(attention)} label="Attention" />
       </View>
 
-      <ThemedText style={styles.sectionLabel}>Shop</ThemedText>
+      <ThemedText style={[styles.sectionLabel, { color: theme.textSecondary }]}>Preferences</ThemedText>
+      <View style={[styles.menu, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        <ThemedText style={[styles.prefTitle, { color: theme.text }]}>Appearance</ThemedText>
+        <View style={styles.chipRow}>
+          {(['system', 'light', 'dark'] as AppearanceMode[]).map((item) => {
+            const active = mode === item;
+            const label = item === 'system' ? 'System' : item === 'light' ? 'Light' : 'Dark';
+            return (
+              <Pressable
+                key={item}
+                onPress={() => setMode(item)}
+                style={[
+                  styles.prefChip,
+                  {
+                    borderColor: theme.border,
+                    backgroundColor: active ? `${theme.primary}18` : theme.background,
+                  },
+                ]}>
+                <ThemedText type="smallBold" themeColor={active ? 'primary' : 'textSecondary'}>
+                  {label}
+                </ThemedText>
+              </Pressable>
+            );
+          })}
+        </View>
+        <ThemedText style={[styles.prefTitle, { color: theme.text, marginTop: Spacing.three }]}>
+          Reminder time
+        </ThemedText>
+        <View style={styles.chipRow}>
+          {REMINDER_HOURS.map((hour) => {
+            const active = reminderHour === hour;
+            return (
+              <Pressable
+                key={hour}
+                onPress={async () => {
+                  setReminderTime(hour, 0);
+                  await ensureNotificationPermissions();
+                }}
+                style={[
+                  styles.prefChip,
+                  {
+                    borderColor: theme.border,
+                    backgroundColor: active ? `${theme.primary}18` : theme.background,
+                  },
+                ]}>
+                <ThemedText type="smallBold" themeColor={active ? 'primary' : 'textSecondary'}>
+                  {hour}:00
+                </ThemedText>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+
+      <ThemedText style={[styles.sectionLabel, { color: theme.textSecondary }]}>Shop</ThemedText>
       <View style={styles.menu}>
         <MenuRow
           icon={Store}
@@ -336,6 +401,25 @@ const styles = StyleSheet.create({
     borderRadius: CardRadius,
     paddingHorizontal: 4,
     marginBottom: Spacing.five,
+  },
+  prefTitle: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 13,
+    marginBottom: Spacing.two,
+    paddingHorizontal: 8,
+  },
+  chipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+    paddingHorizontal: 8,
+    marginBottom: Spacing.two,
+  },
+  prefChip: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   menuRow: {
     flexDirection: 'row',

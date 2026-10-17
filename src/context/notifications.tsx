@@ -9,6 +9,12 @@ import {
 
 import { usePlants } from '@/context/plants';
 import { useStorageState } from '@/hooks/use-storage-state';
+import {
+  getFertilizerStatus,
+  getWaterStatus,
+  isCarePaused,
+  dateKey,
+} from '@/lib/care';
 
 export type AppNotification = {
   id: string;
@@ -76,19 +82,43 @@ export function NotificationsProvider({ children }: PropsWithChildren) {
   );
 
   const notifications = useMemo<AppNotification[]>(() => {
-    const careNotifications = plants
-      .filter((plant) => plant.status !== 'Healthy' && plant.reminderEnabled !== false)
-      .map((plant) => ({
-        id: `care-${plant.id}-${plant.status}`,
-        title: plant.status === 'Overdue' ? 'Watering overdue' : 'Care reminder',
-        message:
-          plant.status === 'Overdue'
-            ? `${plant.name} needs water as soon as possible.`
-            : `${plant.name} is ready for its next watering.`,
-        type: 'care' as const,
-        createdAt: new Date().toISOString(),
-        plantId: plant.id,
-      }));
+    const today = dateKey(new Date());
+    const careNotifications: AppNotification[] = [];
+
+    for (const plant of plants) {
+      if (plant.reminderEnabled === false) continue;
+      if (isCarePaused(plant, today)) continue;
+
+      const water = getWaterStatus(plant, today);
+      if (water !== 'Healthy') {
+        careNotifications.push({
+          id: `care-water-${plant.id}-${water}`,
+          title: water === 'Overdue' ? 'Watering overdue' : 'Watering reminder',
+          message:
+            water === 'Overdue'
+              ? `${plant.name} needs water as soon as possible.`
+              : `${plant.name} is ready for its next watering.`,
+          type: 'care',
+          createdAt: new Date().toISOString(),
+          plantId: plant.id,
+        });
+      }
+
+      const feed = getFertilizerStatus(plant, today);
+      if (feed !== 'Healthy') {
+        careNotifications.push({
+          id: `care-feed-${plant.id}-${feed}`,
+          title: feed === 'Overdue' ? 'Fertilizer overdue' : 'Fertilizer reminder',
+          message:
+            feed === 'Overdue'
+              ? `${plant.name} is overdue for feeding.`
+              : `${plant.name} could use fertilizer soon.`,
+          type: 'care',
+          createdAt: new Date().toISOString(),
+          plantId: plant.id,
+        });
+      }
+    }
 
     return [...extraNotifications, ...careNotifications].sort((a, b) =>
       b.createdAt.localeCompare(a.createdAt),

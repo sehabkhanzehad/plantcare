@@ -22,6 +22,11 @@ export const Colors = {
     statusOverdue: '#B42318',
     border: '#E1E5E2',
     danger: '#B42318',
+    surface: '#FFFFFF',
+    surfaceElevated: '#FFFFFF',
+    accent: '#CFF27E',
+    heroBackground: '#0F2A1D',
+    heroMuted: '#B9C7BD',
   },
   dark: {
     text: '#E8F2E9',
@@ -37,7 +42,21 @@ export const Colors = {
     statusOverdue: '#F97066',
     border: '#2E3D31',
     danger: '#F97066',
+    surface: '#1A241C',
+    surfaceElevated: '#243028',
+    accent: '#CFF27E',
+    heroBackground: '#0A120D',
+    heroMuted: '#9AAB9E',
   },
+} as const;
+
+export const Typography = {
+  caption: 10,
+  small: 11,
+  body: 13,
+  subtitle: 15,
+  title: 17,
+  display: 28,
 } as const;
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;

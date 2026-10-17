@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Image, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ShopBrowsePanel } from '@/components/shop-browse-panel';
-import { BadgeCheck, Heart, MessageCircle, Plus, Search } from 'lucide-react-native';
+import { BadgeCheck, Bookmark, Heart, MessageCircle, Plus, Search } from 'lucide-react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -16,34 +16,43 @@ import {
 } from '@/constants/mock-community';
 import { CardRadius, Spacing } from '@/constants/theme';
 import { useCommunity } from '@/context/community';
+import { useBookmarkedPosts } from '@/hooks/use-bookmarked-posts';
 import { useTheme } from '@/hooks/use-theme';
 
 type FilterCategory = 'All' | PostCategory;
+type ResolutionFilter = 'All' | 'Solved' | 'Open' | 'Saved';
 type ExploreSegment = 'community' | 'shop';
 
 export default function CommunityScreen() {
   const theme = useTheme();
   const { segment } = useLocalSearchParams<{ segment?: string }>();
   const { posts, comments } = useCommunity();
+  const { ids: bookmarkedIds, toggleBookmark, isBookmarked } = useBookmarkedPosts();
   const [userSegment, setUserSegment] = useState<ExploreSegment>('community');
   const explore: ExploreSegment = segment === 'shop' ? 'shop' : userSegment;
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<FilterCategory>('All');
+  const [resolution, setResolution] = useState<ResolutionFilter>('All');
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return posts
       .filter((post) => {
         const matchesCategory = filter === 'All' || post.category === filter;
+        const matchesResolution =
+          resolution === 'All' ||
+          (resolution === 'Solved' && !!post.acceptedAnswerId) ||
+          (resolution === 'Open' && !post.acceptedAnswerId) ||
+          (resolution === 'Saved' && bookmarkedIds.includes(post.id));
         const matchesQuery =
           !q ||
           `${post.title} ${post.body} ${post.authorName} ${post.category}`
             .toLowerCase()
             .includes(q);
-        return matchesCategory && matchesQuery;
+        return matchesCategory && matchesResolution && matchesQuery;
       })
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [filter, posts, query]);
+  }, [bookmarkedIds, filter, posts, query, resolution]);
 
   const commentCount = (postId: string) =>
     comments.filter((comment) => comment.postId === postId).length;
@@ -110,6 +119,25 @@ export default function CommunityScreen() {
         </View>
 
         <View style={styles.filters}>
+          {(['All', 'Solved', 'Open', 'Saved'] as ResolutionFilter[]).map((item) => {
+            const active = resolution === item;
+            return (
+              <Pressable
+                key={item}
+                onPress={() => setResolution(item)}
+                style={[
+                  styles.chip,
+                  { backgroundColor: active ? theme.text : theme.surface, borderColor: theme.border },
+                ]}>
+                <ThemedText type="small" style={{ color: active ? theme.onPrimary : theme.textSecondary }}>
+                  {item}
+                </ThemedText>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <View style={styles.filters}>
           {(['All', ...POST_CATEGORIES] as FilterCategory[]).map((item) => {
             const active = filter === item;
             return (
@@ -144,6 +172,13 @@ export default function CommunityScreen() {
               key={post.id}
               post={post}
               commentCount={commentCount(post.id)}
+              acceptedPreview={
+                post.acceptedAnswerId
+                  ? comments.find((c) => c.id === post.acceptedAnswerId)?.body
+                  : undefined
+              }
+              bookmarked={isBookmarked(post.id)}
+              onToggleBookmark={() => toggleBookmark(post.id)}
               onPress={() =>
                 router.push({ pathname: '/post/[id]', params: { id: post.id } })
               }
@@ -160,10 +195,16 @@ export default function CommunityScreen() {
 function PostCard({
   post,
   commentCount,
+  acceptedPreview,
+  bookmarked,
+  onToggleBookmark,
   onPress,
 }: {
   post: CommunityPost;
   commentCount: number;
+  acceptedPreview?: string;
+  bookmarked: boolean;
+  onToggleBookmark: () => void;
   onPress: () => void;
 }) {
   const theme = useTheme();
@@ -198,6 +239,15 @@ function PostCard({
           {snippet}
         </ThemedText>
 
+        {acceptedPreview ? (
+          <View style={[styles.acceptedPreview, { backgroundColor: `${theme.primary}10` }]}>
+            <BadgeCheck size={14} color={theme.primary} strokeWidth={1.8} />
+            <ThemedText type="small" themeColor="textSecondary" numberOfLines={2}>
+              {acceptedPreview}
+            </ThemedText>
+          </View>
+        ) : null}
+
         {post.imageUri ? <Image source={{ uri: post.imageUri }} style={styles.cardImage} /> : null}
 
         <View style={styles.cardFooter}>
@@ -221,6 +271,14 @@ function PostCard({
               </ThemedText>
             </View>
           ) : null}
+          <Pressable onPress={onToggleBookmark} hitSlop={8} accessibilityLabel="Bookmark post">
+            <Bookmark
+              size={16}
+              color={bookmarked ? theme.primary : theme.textSecondary}
+              fill={bookmarked ? theme.primary : 'transparent'}
+              strokeWidth={1.8}
+            />
+          </Pressable>
         </View>
       </ThemedView>
     </Pressable>
@@ -353,5 +411,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+  },
+  acceptedPreview: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    marginTop: 8,
+    padding: 10,
+    borderRadius: 12,
   },
 });

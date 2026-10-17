@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
-import { ArrowLeft, ChevronRight, Droplets } from 'lucide-react-native';
+import { ArrowLeft, ChevronRight, Droplets, FlaskConical } from 'lucide-react-native';
 import {
   useFonts,
   Manrope_500Medium,
@@ -12,36 +12,18 @@ import {
 
 import { Screen } from '@/components/ui/screen';
 import { ThemedText } from '@/components/themed-text';
-import { usePlants, type Plant } from '@/context/plants';
+import { usePlants } from '@/context/plants';
+import {
+  countDueOnDate,
+  dateKey,
+  getScheduleForDate,
+  type DayScheduleItem,
+} from '@/lib/care';
 import { CardRadius, Spacing } from '@/constants/theme';
-
-const INK = '#0E1D15';
-const MUTED = '#6B776F';
-const SOFT = '#F3F5F1';
-const SURFACE = '#FFFFFF';
-const FOREST = '#0F2A1D';
-const ACCENT = '#CFF27E';
-const LINE = '#E6EBE6';
-
-function dateKey(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
-function daysBetween(from: string, to: string) {
-  const start = new Date(`${from}T00:00:00`).getTime();
-  const end = new Date(`${to}T00:00:00`).getTime();
-  return Math.floor((end - start) / 86400000);
-}
-
-function isDueOn(plant: Plant, date: string) {
-  const elapsed = daysBetween(plant.lastWatered, date);
-  return elapsed >= plant.wateringFrequency && elapsed % plant.wateringFrequency === 0;
-}
+import { useTheme } from '@/hooks/use-theme';
 
 export default function CalendarScreen() {
+  const theme = useTheme();
   const { plants } = usePlants();
   const [fontsLoaded] = useFonts({
     Manrope_500Medium,
@@ -62,12 +44,11 @@ export default function CalendarScreen() {
   );
 
   const [selectedDate, setSelectedDate] = useState(dateKey(days[0]));
-  const selectedPlants = plants.filter((plant) => isDueOn(plant, selectedDate));
+  const schedule = getScheduleForDate(plants, selectedDate);
   const dueByDay = useMemo(() => {
     const map = new Map<string, number>();
     days.forEach((date) => {
-      const key = dateKey(date);
-      map.set(key, plants.filter((plant) => isDueOn(plant, key)).length);
+      map.set(dateKey(date), countDueOnDate(plants, dateKey(date)));
     });
     return map;
   }, [days, plants]);
@@ -77,39 +58,49 @@ export default function CalendarScreen() {
   const dayLabel = selected.toLocaleDateString(undefined, { weekday: 'long' });
   const dateLabel = selected.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 
+  const waterCount = schedule.filter((item) => item.waterDue).length;
+  const feedCount = schedule.filter((item) => item.fertilizeDue).length;
+
   if (!fontsLoaded) {
     return (
-      <Screen padded style={styles.screen}>
+      <Screen padded style={[styles.screen, { backgroundColor: theme.background }]}>
         <ThemedText style={styles.loading}>Loading…</ThemedText>
       </Screen>
     );
   }
 
   return (
-    <Screen scroll padded style={styles.screen}>
+    <Screen scroll padded style={[styles.screen, { backgroundColor: theme.background }]}>
       <View style={styles.topBar}>
         <Pressable
           accessibilityLabel="Go back"
           onPress={() => router.back()}
           hitSlop={10}
-          style={styles.backButton}>
-          <ArrowLeft size={18} color={INK} strokeWidth={1.7} />
+          style={[styles.backButton, { backgroundColor: theme.surface }]}>
+          <ArrowLeft size={18} color={theme.text} strokeWidth={1.7} />
         </Pressable>
-        <ThemedText style={styles.topLabel}>Care</ThemedText>
+        <ThemedText style={[styles.topLabel, { color: theme.text }]}>Care</ThemedText>
         <View style={styles.topSpacer} />
       </View>
 
       <View style={styles.hero}>
-        <ThemedText style={styles.eyebrow}>{isToday ? 'Today' : dayLabel}</ThemedText>
-        <ThemedText style={styles.heroTitle}>{dateLabel}</ThemedText>
-        <ThemedText style={styles.heroSub}>
-          {selectedPlants.length === 0
+        <ThemedText style={[styles.eyebrow, { color: theme.textSecondary }]}>
+          {isToday ? 'Today' : dayLabel}
+        </ThemedText>
+        <ThemedText style={[styles.heroTitle, { color: theme.text }]}>{dateLabel}</ThemedText>
+        <ThemedText style={[styles.heroSub, { color: theme.textSecondary }]}>
+          {schedule.length === 0
             ? 'A quiet day for your garden'
-            : `${selectedPlants.length} plant${selectedPlants.length === 1 ? '' : 's'} need water`}
+            : [
+                waterCount > 0 ? `${waterCount} water` : null,
+                feedCount > 0 ? `${feedCount} feed` : null,
+              ]
+                .filter(Boolean)
+                .join(' · ')}
         </ThemedText>
       </View>
 
-      <View style={styles.weekCard}>
+      <View style={[styles.weekCard, { backgroundColor: theme.surface }]}>
         <View style={styles.week}>
           {days.map((date) => {
             const key = dateKey(date);
@@ -124,23 +115,33 @@ export default function CalendarScreen() {
                 accessibilityLabel={`Select ${date.toDateString()}`}
                 style={styles.day}
                 android_ripple={{ color: 'transparent' }}>
-                <ThemedText style={[styles.dayName, active && styles.dayNameActive]}>
+                <ThemedText
+                  style={[
+                    styles.dayName,
+                    { color: theme.textSecondary },
+                    active && { color: theme.primary },
+                  ]}>
                   {date.toLocaleDateString(undefined, { weekday: 'narrow' })}
                 </ThemedText>
                 <View
                   style={[
                     styles.dayNumberWrap,
-                    active && styles.dayNumberWrapActive,
+                    active && { backgroundColor: theme.text, borderRadius: 999 },
                   ]}>
-                  <ThemedText style={[styles.dayNumber, active && styles.dayNumberActive]}>
+                  <ThemedText
+                    style={[
+                      styles.dayNumber,
+                      { color: theme.text },
+                      active && { color: theme.accent },
+                    ]}>
                     {date.getDate()}
                   </ThemedText>
                 </View>
                 <View
                   style={[
                     styles.dayDot,
-                    dueCount > 0 ? styles.dayDotOn : styles.dayDotOff,
-                    active && dueCount > 0 && styles.dayDotActive,
+                    dueCount > 0 ? { backgroundColor: theme.primary } : { backgroundColor: 'transparent' },
+                    active && dueCount > 0 && { backgroundColor: theme.accent },
                   ]}
                 />
               </Pressable>
@@ -150,27 +151,28 @@ export default function CalendarScreen() {
       </View>
 
       <View style={styles.sectionHeader}>
-        <ThemedText style={styles.sectionTitle}>Schedule</ThemedText>
-        <ThemedText style={styles.sectionMeta}>
-          {selectedPlants.length} due
+        <ThemedText style={[styles.sectionTitle, { color: theme.text }]}>Schedule</ThemedText>
+        <ThemedText style={[styles.sectionMeta, { color: theme.textSecondary }]}>
+          {schedule.length} due
         </ThemedText>
       </View>
 
-      {selectedPlants.length === 0 ? (
-        <View style={styles.empty}>
-          <View style={styles.emptyRule} />
-          <ThemedText style={styles.emptyTitle}>All clear</ThemedText>
-          <ThemedText style={styles.emptyText}>
-            No watering planned for this day.
+      {schedule.length === 0 ? (
+        <View style={[styles.empty, { backgroundColor: theme.surface }]}>
+          <View style={[styles.emptyRule, { backgroundColor: theme.accent }]} />
+          <ThemedText style={[styles.emptyTitle, { color: theme.text }]}>All clear</ThemedText>
+          <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>
+            No care tasks planned for this day.
           </ThemedText>
         </View>
       ) : (
-        <View style={styles.list}>
-          {selectedPlants.map((plant, index) => (
-            <WateringRow
-              key={plant.id}
-              plant={plant}
-              isLast={index === selectedPlants.length - 1}
+        <View style={[styles.list, { backgroundColor: theme.surface }]}>
+          {schedule.map((item, index) => (
+            <ScheduleRow
+              key={`${item.plant.id}-${item.waterDue}-${item.fertilizeDue}`}
+              item={item}
+              isLast={index === schedule.length - 1}
+              theme={theme}
             />
           ))}
         </View>
@@ -179,33 +181,42 @@ export default function CalendarScreen() {
   );
 }
 
-function WateringRow({ plant, isLast }: { plant: Plant; isLast: boolean }) {
+function ScheduleRow({
+  item,
+  isLast,
+  theme,
+}: {
+  item: DayScheduleItem;
+  isLast: boolean;
+  theme: ReturnType<typeof useTheme>;
+}) {
+  const { plant, waterDue, fertilizeDue } = item;
+  const label = [waterDue ? 'Water' : null, fertilizeDue ? 'Feed' : null].filter(Boolean).join(' + ');
+  const Icon = fertilizeDue && !waterDue ? FlaskConical : Droplets;
+
   return (
     <Pressable
       onPress={() => router.push({ pathname: '/plant/[id]', params: { id: plant.id } })}
-      style={[styles.row, !isLast && styles.rowBorder]}
+      style={[styles.row, !isLast && { borderBottomColor: theme.border, borderBottomWidth: StyleSheet.hairlineWidth }]}
       accessibilityRole="button"
       accessibilityLabel={`Open ${plant.name}`}>
-      <View style={styles.rowIcon}>
-        <Droplets size={16} color={FOREST} strokeWidth={1.7} />
+      <View style={[styles.rowIcon, { backgroundColor: theme.background }]}>
+        <Icon size={16} color={theme.primary} strokeWidth={1.7} />
       </View>
       <View style={styles.rowCopy}>
-        <ThemedText style={styles.rowTitle}>{plant.name}</ThemedText>
-        <ThemedText style={styles.rowMeta}>
-          {plant.type} · every {plant.wateringFrequency}d
+        <ThemedText style={[styles.rowTitle, { color: theme.text }]}>{plant.name}</ThemedText>
+        <ThemedText style={[styles.rowMeta, { color: theme.textSecondary }]}>
+          {label} · {plant.type}
         </ThemedText>
       </View>
-      <ChevronRight size={16} color="#A3AFA6" strokeWidth={1.7} />
+      <ChevronRight size={16} color={theme.textSecondary} strokeWidth={1.7} />
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    backgroundColor: SOFT,
-  },
+  screen: {},
   loading: {
-    color: MUTED,
     fontFamily: 'Manrope_500Medium',
   },
   topBar: {
@@ -217,14 +228,12 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: SURFACE,
     alignItems: 'center',
     justifyContent: 'center',
   },
   topLabel: {
     flex: 1,
     textAlign: 'center',
-    color: INK,
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 13,
     letterSpacing: 1.4,
@@ -238,27 +247,23 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   eyebrow: {
-    color: MUTED,
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 12,
     letterSpacing: 0.4,
   },
   heroTitle: {
-    color: INK,
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 40,
     lineHeight: 44,
     letterSpacing: -0.8,
   },
   heroSub: {
-    color: MUTED,
     fontFamily: 'Manrope_500Medium',
     fontSize: 15,
     lineHeight: 22,
     marginTop: 2,
   },
   weekCard: {
-    backgroundColor: SURFACE,
     borderRadius: CardRadius,
     paddingVertical: 14,
     paddingHorizontal: 8,
@@ -275,13 +280,9 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   dayName: {
-    color: '#9AA49C',
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 10,
     letterSpacing: 0.2,
-  },
-  dayNameActive: {
-    color: FOREST,
   },
   dayNumberWrap: {
     width: 36,
@@ -292,33 +293,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'transparent',
   },
-  dayNumberWrapActive: {
-    backgroundColor: FOREST,
-    borderRadius: 999,
-  },
   dayNumber: {
-    color: INK,
     fontFamily: 'Manrope_700Bold',
     fontSize: 15,
     textAlign: 'center',
     includeFontPadding: false,
   },
-  dayNumberActive: {
-    color: ACCENT,
-  },
   dayDot: {
     width: 4,
     height: 4,
     borderRadius: 2,
-  },
-  dayDotOn: {
-    backgroundColor: FOREST,
-  },
-  dayDotOff: {
-    backgroundColor: 'transparent',
-  },
-  dayDotActive: {
-    backgroundColor: ACCENT,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -327,17 +311,14 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.three,
   },
   sectionTitle: {
-    color: INK,
     fontFamily: 'Manrope_700Bold',
     fontSize: 17,
   },
   sectionMeta: {
-    color: MUTED,
     fontFamily: 'Manrope_500Medium',
     fontSize: 12,
   },
   list: {
-    backgroundColor: SURFACE,
     borderRadius: CardRadius,
     paddingHorizontal: 4,
     marginBottom: Spacing.five,
@@ -349,15 +330,10 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 12,
   },
-  rowBorder: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: LINE,
-  },
   rowIcon: {
     width: 36,
     height: 36,
     borderRadius: 12,
-    backgroundColor: SOFT,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -366,17 +342,14 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   rowTitle: {
-    color: INK,
     fontFamily: 'Manrope_700Bold',
     fontSize: 15,
   },
   rowMeta: {
-    color: MUTED,
     fontFamily: 'Manrope_500Medium',
     fontSize: 12,
   },
   empty: {
-    backgroundColor: SURFACE,
     borderRadius: CardRadius,
     paddingVertical: 36,
     paddingHorizontal: 24,
@@ -388,16 +361,13 @@ const styles = StyleSheet.create({
     width: 28,
     height: 2,
     borderRadius: 1,
-    backgroundColor: ACCENT,
     marginBottom: 8,
   },
   emptyTitle: {
-    color: INK,
     fontFamily: 'Manrope_700Bold',
     fontSize: 16,
   },
   emptyText: {
-    color: MUTED,
     fontFamily: 'Manrope_500Medium',
     fontSize: 13,
     textAlign: 'center',

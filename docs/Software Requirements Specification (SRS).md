@@ -150,3 +150,17 @@ The mobile app includes a **Shop** marketplace where users can browse listings, 
 
 **Out of scope (marketplace):** real online payments, shipping integration, Laravel API sync, and web admin panel for inventory (planned for a later phase).
 
+### **Appendix D — Local care module (mobile-only, current release)**
+
+| Capability | Implementation |
+| ----- | ----- |
+| Water + fertilizer status | Derived on device from plant dates and frequencies (`src/lib/care.ts`) |
+| Today’s care tasks | Built from live plant records; completing a task writes care logs |
+| Calendar schedule | Seven-day view with water and feed due dates |
+| Care history & growth journal | AsyncStorage via `PlantsProvider` |
+| In-app notifications | Derived care alerts in notifications screen |
+| Local push reminders | `expo-notifications` schedules next water/feed per plant when reminders enabled |
+| Plant type catalog | Static catalog autofills add-plant defaults |
+| Vacation pause | `carePausedUntil` excludes tasks and notification scheduling |
+| Community knowledge | Solved / Open / Saved filters on local community posts |
+

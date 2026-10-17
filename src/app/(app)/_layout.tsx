@@ -1,7 +1,10 @@
 import { Stack } from 'expo-router';
 
+import { AppearanceProvider } from '@/context/appearance';
+
 export default function AppLayout() {
   return (
+    <AppearanceProvider>
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="plant/[id]" />
@@ -15,5 +18,6 @@ export default function AppLayout() {
       <Stack.Screen name="shop/orders" />
       <Stack.Screen name="shop/my-listings" />
     </Stack>
+    </AppearanceProvider>
   );
 }

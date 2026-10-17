@@ -1,5 +1,10 @@
 import AppTabs from '@/components/app-tabs';
+import { AppearanceProvider } from '@/context/appearance';
 
 export default function TabsLayout() {
-  return <AppTabs />;
+  return (
+    <AppearanceProvider>
+      <AppTabs />
+    </AppearanceProvider>
+  );
 }
