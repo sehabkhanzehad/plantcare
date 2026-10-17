@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
+import { ArrowLeft } from 'lucide-react-native';
 
 import { useNotifications } from '@/context/notifications';
 import { Screen } from '@/components/ui/screen';
@@ -14,7 +15,15 @@ export default function NotificationsScreen() {
   const { notifications, unreadCount, isRead, markAsRead, markAllAsRead } = useNotifications();
 
   return (
-    <Screen scroll>
+    <Screen scroll padded>
+      <View style={styles.topBar}>
+        <Pressable
+          accessibilityLabel="Go back"
+          onPress={() => router.back()}
+          style={styles.backButton}>
+          <ArrowLeft size={20} color={theme.text} strokeWidth={1.8} />
+        </Pressable>
+      </View>
       <View style={styles.header}>
         <View style={styles.headerText}>
           <ThemedText type="subtitle" style={styles.title}>Notifications</ThemedText>
@@ -77,6 +86,15 @@ export default function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
+  topBar: { marginBottom: Spacing.two },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   header: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, marginBottom: Spacing.four },
   headerText: { flex: 1 },
   title: { fontSize: 28, lineHeight: 36 },

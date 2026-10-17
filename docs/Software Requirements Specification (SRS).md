@@ -133,3 +133,20 @@ The major entities of the system may include:
 * Plant Notes  
 * Admin Users/Roles
 
+## **8\. Marketplace (Shop) Module**
+
+The mobile app includes a **Shop** marketplace where users can browse listings, sell plants, and place **simulated** orders (no real payment gateway in this release). Official inventory is sold under **PlantCare Store** by an administrator.
+
+| SL | Description | Priority |
+| ----- | ----- | ----- |
+| M-01 | The system shall allow users to browse active marketplace listings with search and filters. | High |
+| M-02 | The system shall allow authenticated users to create, edit, and remove their own listings. | High |
+| M-03 | The system shall allow users to view listing details including price, condition, and seller. | High |
+| M-04 | The system shall allow users to place a simulated purchase order for available listings. | High |
+| M-05 | The system shall prevent users from purchasing their own listings. | High |
+| M-06 | The system shall record order history for the buyer. | Medium |
+| M-07 | The system shall allow an administrator to publish official **PlantCare Store** listings (demo: `admin@plantcare.app`). | Medium |
+| M-08 | The system shall persist marketplace data locally on the device (mock phase). | High |
+
+**Out of scope (marketplace):** real online payments, shipping integration, Laravel API sync, and web admin panel for inventory (planned for a later phase).
+

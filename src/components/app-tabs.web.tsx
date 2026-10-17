@@ -8,7 +8,7 @@ import {
 } from 'expo-router/ui';
 import { Pressable, View, StyleSheet } from 'react-native';
 
-import { CalendarDays, House, Leaf, Plus, UserRound, type LucideIcon } from 'lucide-react-native';
+import { House, Leaf, MessagesSquare, Plus, UserRound, type LucideIcon } from 'lucide-react-native';
 
 import { CardRadius, Colors, MaxContentWidth } from '@/constants/theme';
 
@@ -27,8 +27,8 @@ export default function AppTabs() {
           <TabTrigger name="add-plant" href="/add-plant" asChild>
             <TabButton icon={Plus} label="Add plant" featured />
           </TabTrigger>
-          <TabTrigger name="calendar" href="/calendar" asChild>
-            <TabButton icon={CalendarDays} label="Calendar" />
+          <TabTrigger name="community" href="/community" asChild>
+            <TabButton icon={MessagesSquare} label="Community" />
           </TabTrigger>
           <TabTrigger name="profile" href="/profile" asChild>
             <TabButton icon={UserRound} label="Profile" />
@@ -75,10 +75,12 @@ export function TabButton({
   );
 }
 
-export function CustomTabList(props: TabListProps) {
+export function CustomTabList({ style, children, ...props }: TabListProps) {
   return (
-    <View {...props} style={styles.tabListContainer}>
-      <View style={styles.innerContainer}>{props.children}</View>
+    <View {...props} style={[style, styles.tabListContainer]} pointerEvents="box-none">
+      <View style={styles.innerContainer} pointerEvents="auto">
+        {children}
+      </View>
     </View>
   );
 }

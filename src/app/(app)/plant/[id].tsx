@@ -55,6 +55,22 @@ export default function PlantDetailsScreen() {
             onPress={() => logCare(plant.id, 'fertilized')}
             style={styles.actionButton}
           />
+          <Button
+            title="List for sale"
+            variant="secondary"
+            onPress={() =>
+              router.push({
+                pathname: '/shop/create',
+                params: {
+                  plantId: plant.id,
+                  title: plant.name,
+                  type: plant.type,
+                  image: plant.image ?? '',
+                },
+              })
+            }
+            style={styles.actionButton}
+          />
         </View>
       </ThemedView>
       <ThemedText type="smallBold" style={styles.sectionTitle}>Growth journal</ThemedText>

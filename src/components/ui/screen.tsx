@@ -49,7 +49,7 @@ export function Screen({
             <ScrollView
               style={styles.scroll}
               contentContainerStyle={styles.scrollContent}
-              keyboardShouldPersistTaps="handled"
+              keyboardShouldPersistTaps="always"
               keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
               showsVerticalScrollIndicator={false}>
               {content}

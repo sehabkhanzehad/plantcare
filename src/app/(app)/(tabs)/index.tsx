@@ -1,9 +1,9 @@
 import { useState, type ReactNode } from 'react';
-import { Image, Pressable, StyleSheet, View } from 'react-native';
-import { router } from 'expo-router';
+import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Link, router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useFonts, Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold, Manrope_800ExtraBold } from '@expo-google-fonts/manrope';
-import { Bell, Check, Droplets, FlaskConical, Flame, Leaf, Sparkles, Sun, Thermometer } from 'lucide-react-native';
+import { Bell, CalendarDays, Check, Droplets, FlaskConical, Flame, Leaf, ShoppingBag, Sparkles, Sun, Thermometer } from 'lucide-react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 
 import { useNotifications } from '@/context/notifications';
@@ -11,7 +11,7 @@ import { usePlants } from '@/context/plants';
 import { Screen } from '@/components/ui/screen';
 import { ThemedText } from '@/components/themed-text';
 import { useTheme } from '@/hooks/use-theme';
-import { CardRadius } from '@/constants/theme';
+import { BottomTabInset, CardRadius, Spacing } from '@/constants/theme';
 
 const unsplash = (id: string, w = 480) =>
   `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&q=80`;
@@ -52,9 +52,9 @@ export default function DashboardScreen() {
   if (!fontsLoaded) return <View style={styles.loader}><ThemedText>Loading...</ThemedText></View>;
 
   return (
-    <Screen scroll tabBarInset style={styles.screen}>
+    <Screen tabBarInset={false} style={styles.screen}>
       <View style={styles.top}>
-        <View style={styles.userBlock}>
+        <View style={styles.userBlock} pointerEvents="box-none">
           <View style={styles.avatar}>
             <SymbolView
               name={{ ios: 'leaf.fill', android: 'eco', web: 'eco' }}
@@ -72,12 +72,34 @@ export default function DashboardScreen() {
             </ThemedText>
           </View>
         </View>
-        <Pressable onPress={() => router.push('/notifications')} accessibilityLabel="Open notifications" style={styles.bell}>
-          <Bell size={20} color={theme.text} strokeWidth={1.8} />
-          {unreadCount > 0 ? <View style={styles.unread} /> : null}
-        </Pressable>
+        <View style={styles.topActions}>
+          <Link href="/calendar" asChild>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Open calendar"
+              hitSlop={12}
+              style={styles.bell}>
+              <CalendarDays size={20} color={theme.text} strokeWidth={1.8} pointerEvents="none" />
+            </Pressable>
+          </Link>
+          <Link href="/notifications" asChild>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Open notifications"
+              hitSlop={12}
+              style={styles.bell}>
+              <Bell size={20} color={theme.text} strokeWidth={1.8} pointerEvents="none" />
+              {unreadCount > 0 ? <View style={styles.unread} pointerEvents="none" /> : null}
+            </Pressable>
+          </Link>
+        </View>
       </View>
 
+      <ScrollView
+        style={styles.bodyScroll}
+        contentContainerStyle={styles.bodyContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="always">
       <View style={styles.conditions}>
         <Condition icon={<Thermometer size={16} color={theme.primary} />} text="26°C Indoor" />
         <Condition icon={<Droplets size={16} color="#2F6F8F" />} text="68% Humidity" />
@@ -98,6 +120,20 @@ export default function DashboardScreen() {
           </View>
         </View>
       </View>
+
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => router.push({ pathname: '/community', params: { segment: 'shop' } })}
+        style={[styles.shopCard, { backgroundColor: theme.text }]}>
+        <View style={styles.shopIcon}>
+          <ShoppingBag size={22} color="#CFF27E" strokeWidth={1.8} />
+        </View>
+        <View style={styles.shopCopy}>
+          <ThemedText style={styles.shopTitle}>Buy & sell plants</ThemedText>
+          <ThemedText style={styles.shopSubtitle}>Community shop and PlantCare Store</ThemedText>
+        </View>
+        <ThemedText style={styles.shopCta}>Open</ThemedText>
+      </Pressable>
 
       <SectionHeader title="Today's care" trailing={`${done.length} of ${TASKS.length} done`} />
       <View style={styles.taskList}>
@@ -165,6 +201,7 @@ export default function DashboardScreen() {
       </View>
 
       <View style={styles.tip}><View style={styles.tipIcon}><Sparkles size={20} color="#CFF27E" /></View><View style={styles.tipCopy}><ThemedText style={styles.tipTitle}>Smart tip</ThemedText><ThemedText style={styles.tipText}>Plants absorb more water in the morning. Try to finish watering before 10 AM.</ThemedText></View></View>
+      </ScrollView>
     </Screen>
   );
 }
@@ -201,16 +238,33 @@ function TaskRow({ task, complete, onPress }: { task: Task; complete: boolean; o
 function Metric({ label, value, color, points }: { label: string; value: string; color: string; points: string }) { return <View style={styles.metric}><ThemedText style={styles.metricLabel}>{label}</ThemedText><ThemedText style={styles.metricValue}>{value}</ThemedText><Svg width="100%" height={36} viewBox="0 0 100 36"><Path d={points} fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round" /></Svg></View>; }
 
 const styles = StyleSheet.create({
-  screen: { backgroundColor: '#F3F5F1' },
+  screen: { backgroundColor: '#F3F5F1', flex: 1 },
   loader: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F3F5F1' },
-  top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 },
-  userBlock: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  top: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    zIndex: 10,
+    elevation: 10,
+  },
+  userBlock: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 12, marginRight: 8 },
   userCopy: { flex: 1, width: 0, minWidth: 0 },
   avatar: { width: 48, height: 48, borderRadius: 14, backgroundColor: '#2F6F3E', alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-8deg' }] },
   date: { color: '#5B6B61', fontFamily: 'Manrope_500Medium', fontSize: 12 },
   greeting: { color: '#0E1D15', fontFamily: 'Manrope_800ExtraBold', fontSize: 19, lineHeight: 26, width: '100%' },
-  bell: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
+  topActions: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 0 },
+  bell: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   unread: { position: 'absolute', top: 10, right: 10, width: 7, height: 7, borderRadius: 4, backgroundColor: '#1F6B45' },
+  bodyScroll: { flex: 1 },
+  bodyContent: { paddingBottom: BottomTabInset + Spacing.five },
   conditions: { flexDirection: 'row', gap: 8, marginBottom: 20 },
   condition: { flex: 1, minHeight: 60, borderRadius: 16, backgroundColor: '#FFFFFF', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 9 },
   conditionIcon: { height: 20, justifyContent: 'center' },
@@ -234,6 +288,26 @@ const styles = StyleSheet.create({
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
   sectionTitle: { color: '#0E1D15', fontFamily: 'Manrope_700Bold', fontSize: 17 },
   sectionTrailing: { color: '#1F6B45', fontFamily: 'Manrope_600SemiBold', fontSize: 11 },
+  shopCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderRadius: CardRadius,
+    padding: 16,
+    marginBottom: 22,
+  },
+  shopIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: '#1F4A32',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  shopCopy: { flex: 1, gap: 2 },
+  shopTitle: { color: '#FFFFFF', fontFamily: 'Manrope_700Bold', fontSize: 15 },
+  shopSubtitle: { color: '#B9C7BD', fontFamily: 'Manrope_500Medium', fontSize: 11 },
+  shopCta: { color: '#CFF27E', fontFamily: 'Manrope_700Bold', fontSize: 12 },
   taskList: { gap: 8, marginBottom: 22 },
   task: { minHeight: 70, borderRadius: CardRadius, backgroundColor: '#FFFFFF', padding: 12, flexDirection: 'row', alignItems: 'center', gap: 11 },
   taskComplete: { opacity: 0.6 },

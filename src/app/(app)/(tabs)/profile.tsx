@@ -1,141 +1,380 @@
-import { StyleSheet, View } from 'react-native';
+import { Alert, Image, Pressable, StyleSheet, View } from 'react-native';
+import { router } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
+import {
+  Camera,
+  ChevronRight,
+  LogOut,
+  Package,
+  ShoppingBag,
+  Store,
+} from 'lucide-react-native';
+import {
+  useFonts,
+  Manrope_500Medium,
+  Manrope_600SemiBold,
+  Manrope_700Bold,
+  Manrope_800ExtraBold,
+} from '@expo-google-fonts/manrope';
 
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
 import { useSession } from '@/context/auth';
 import { usePlants } from '@/context/plants';
-import { useTheme } from '@/hooks/use-theme';
 import { CardRadius, Spacing } from '@/constants/theme';
 
+const INK = '#0E1D15';
+const MUTED = '#6B776F';
+const SOFT = '#F3F5F1';
+const SURFACE = '#FFFFFF';
+const FOREST = '#0F2A1D';
+const ACCENT = '#CFF27E';
+const LINE = '#E6EBE6';
+const DANGER = '#B42318';
+
 export default function ProfileScreen() {
-  const theme = useTheme();
-  const { user, signOut } = useSession();
+  const { user, signOut, updateProfile } = useSession();
   const { plants } = usePlants();
+  const [fontsLoaded] = useFonts({
+    Manrope_500Medium,
+    Manrope_600SemiBold,
+    Manrope_700Bold,
+    Manrope_800ExtraBold,
+  });
 
   const total = plants.length;
   const healthy = plants.filter((p) => p.status === 'Healthy').length;
   const attention = plants.filter((p) => p.status !== 'Healthy').length;
+  const initial = (user?.name?.charAt(0) ?? 'P').toUpperCase();
+
+  async function pickAvatar() {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Permission needed', 'Allow photo access to set a profile picture.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.85,
+    });
+
+    if (!result.canceled && result.assets[0]?.uri) {
+      updateProfile({ avatarUri: result.assets[0].uri });
+    }
+  }
+
+  function confirmSignOut() {
+    Alert.alert('Sign out', 'Leave your PlantCare session?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Sign out', style: 'destructive', onPress: signOut },
+    ]);
+  }
+
+  if (!fontsLoaded) {
+    return (
+      <Screen padded style={styles.screen}>
+        <ThemedText style={styles.loading}>Loading…</ThemedText>
+      </Screen>
+    );
+  }
 
   return (
-    <Screen scroll tabBarInset>
-      <View style={styles.header}>
-        <ThemedText type="subtitle">Profile</ThemedText>
-        <ThemedText type="default" themeColor="textSecondary">
-          Your PlantCare account
-        </ThemedText>
+    <Screen scroll tabBarInset style={styles.screen}>
+      <ThemedText style={styles.eyebrow}>Account</ThemedText>
+      <ThemedText style={styles.title}>Profile</ThemedText>
+
+      <View style={styles.identity}>
+        <Pressable
+          onPress={pickAvatar}
+          accessibilityRole="button"
+          accessibilityLabel="Change profile photo"
+          style={styles.avatarPressable}>
+          <View style={styles.avatarRing}>
+            {user?.avatarUri ? (
+              <Image source={{ uri: user.avatarUri }} style={styles.avatarImage} />
+            ) : (
+              <View style={styles.avatarFallback}>
+                <ThemedText style={styles.avatarInitial}>{initial}</ThemedText>
+              </View>
+            )}
+          </View>
+          <View style={styles.cameraBadge}>
+            <Camera size={14} color={FOREST} strokeWidth={1.8} />
+          </View>
+        </Pressable>
+
+        <ThemedText style={styles.name}>{user?.name ?? 'Plant Lover'}</ThemedText>
+        <ThemedText style={styles.email}>{user?.email ?? '—'}</ThemedText>
+        {user?.role === 'admin' ? (
+          <View style={styles.rolePill}>
+            <ThemedText style={styles.roleText}>Store manager</ThemedText>
+          </View>
+        ) : null}
+        <Pressable onPress={pickAvatar} hitSlop={8}>
+          <ThemedText style={styles.photoAction}>
+            {user?.avatarUri ? 'Change photo' : 'Add profile photo'}
+          </ThemedText>
+        </Pressable>
       </View>
 
-      <ThemedView type="backgroundElement" style={styles.card}>
-        <View style={styles.avatarRow}>
-          <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
-            <ThemedText type="title" style={styles.avatarText}>
-              {user?.name?.charAt(0) ?? '?'}
-            </ThemedText>
-          </View>
-          <View style={styles.avatarInfo}>
-            <ThemedText type="title" style={styles.displayName}>
-              {user?.name ?? 'Plant Lover'}
-            </ThemedText>
-            <ThemedText type="default" themeColor="textSecondary" style={styles.email}>
-              {user?.email ?? '—'}
-            </ThemedText>
-          </View>
-        </View>
-        <ThemedView type="border" style={styles.divider} />
-        <InfoRow label="Member since" value="Today" />
-        <InfoRow label="Plants tracked" value={String(total)} />
-        <InfoRow label="Healthy" value={String(healthy)} />
-        <InfoRow label="Needs attention" value={String(attention)} />
-      </ThemedView>
+      <View style={styles.stats}>
+        <Stat value={String(total)} label="Plants" />
+        <View style={styles.statDivider} />
+        <Stat value={String(healthy)} label="Healthy" />
+        <View style={styles.statDivider} />
+        <Stat value={String(attention)} label="Attention" />
+      </View>
 
-      <View style={styles.actions}>
-        <Button
-          title="Edit profile"
-          variant="secondary"
-          style={styles.editBtn}
-          onPress={() => {}}
+      <ThemedText style={styles.sectionLabel}>Shop</ThemedText>
+      <View style={styles.menu}>
+        <MenuRow
+          icon={Store}
+          label="My listings"
+          onPress={() => router.push('/shop/my-listings')}
         />
-        <Button title="Sign out" variant="danger" onPress={signOut} style={styles.signOut} />
+        <MenuRow
+          icon={Package}
+          label="My orders"
+          onPress={() => router.push('/shop/orders')}
+        />
+        <MenuRow
+          icon={ShoppingBag}
+          label="Browse shop"
+          onPress={() => router.push({ pathname: '/community', params: { segment: 'shop' } })}
+          isLast
+        />
       </View>
+
+      <Pressable
+        onPress={confirmSignOut}
+        accessibilityRole="button"
+        accessibilityLabel="Sign out"
+        style={styles.signOut}>
+        <LogOut size={16} color={DANGER} strokeWidth={1.8} />
+        <ThemedText style={styles.signOutText}>Sign out</ThemedText>
+      </Pressable>
     </Screen>
   );
 }
 
-function InfoRow({ label, value }: { label: string; value: string }) {
+function Stat({ value, label }: { value: string; label: string }) {
   return (
-    <View style={styles.infoRow}>
-      <ThemedText type="small" themeColor="textSecondary">
-        {label}
-      </ThemedText>
-      <ThemedText type="smallBold">{value}</ThemedText>
+    <View style={styles.stat}>
+      <ThemedText style={styles.statValue}>{value}</ThemedText>
+      <ThemedText style={styles.statLabel}>{label}</ThemedText>
     </View>
   );
 }
 
+function MenuRow({
+  icon: Icon,
+  label,
+  onPress,
+  isLast = false,
+}: {
+  icon: typeof Store;
+  label: string;
+  onPress: () => void;
+  isLast?: boolean;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={[styles.menuRow, !isLast && styles.menuRowBorder]}
+      accessibilityRole="button"
+      accessibilityLabel={label}>
+      <View style={styles.menuIcon}>
+        <Icon size={16} color={FOREST} strokeWidth={1.7} />
+      </View>
+      <ThemedText style={styles.menuLabel}>{label}</ThemedText>
+      <ChevronRight size={16} color="#A3AFA6" strokeWidth={1.7} />
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
-  header: {
-    gap: Spacing.two,
-    marginBottom: Spacing.four,
+  screen: {
+    backgroundColor: SOFT,
   },
-  card: {
-    padding: Spacing.three,
-    borderRadius: CardRadius,
-    gap: Spacing.three,
+  loading: {
+    color: MUTED,
+    fontFamily: 'Manrope_500Medium',
   },
-  avatarRow: {
-    flexDirection: 'row',
+  eyebrow: {
+    color: MUTED,
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 12,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    marginBottom: 6,
+  },
+  title: {
+    color: INK,
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 34,
+    lineHeight: 40,
+    letterSpacing: -0.6,
+    marginBottom: Spacing.five,
+  },
+  identity: {
     alignItems: 'center',
-    gap: Spacing.three,
-    marginBottom: Spacing.two,
+    marginBottom: Spacing.five,
   },
-  avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+  avatarPressable: {
+    marginBottom: Spacing.three,
+  },
+  avatarRing: {
+    width: 104,
+    height: 104,
+    borderRadius: 52,
+    padding: 4,
+    backgroundColor: SURFACE,
+    borderWidth: 1,
+    borderColor: LINE,
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 48,
+  },
+  avatarFallback: {
+    flex: 1,
+    borderRadius: 48,
+    backgroundColor: FOREST,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: {
-    fontSize: 24,
+  avatarInitial: {
+    color: ACCENT,
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 36,
+    lineHeight: 40,
+  },
+  cameraBadge: {
+    position: 'absolute',
+    right: 2,
+    bottom: 2,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: ACCENT,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: SOFT,
+  },
+  name: {
+    color: INK,
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 22,
     lineHeight: 28,
-    fontWeight: '600' as const,
-    color: '#FFFFFF',
-  },
-  avatarInfo: {
-    gap: Spacing.one,
-  },
-  displayName: {
-    fontSize: 20,
-    lineHeight: 26,
-    fontWeight: '600' as const,
   },
   email: {
+    color: MUTED,
+    fontFamily: 'Manrope_500Medium',
     fontSize: 14,
-    lineHeight: 20,
+    marginTop: 4,
   },
-  divider: {
-    height: 1,
-    marginVertical: Spacing.two,
+  rolePill: {
+    marginTop: Spacing.two,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    backgroundColor: `${FOREST}12`,
   },
-  infoRow: {
+  roleText: {
+    color: FOREST,
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 11,
+  },
+  photoAction: {
+    marginTop: Spacing.three,
+    color: FOREST,
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 13,
+  },
+  stats: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: Spacing.one,
-    paddingVertical: Spacing.one,
+    backgroundColor: SURFACE,
+    borderRadius: CardRadius,
+    paddingVertical: 18,
+    marginBottom: Spacing.five,
   },
-  actions: {
-    gap: Spacing.two,
-    marginTop: Spacing.five,
+  stat: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 4,
   },
-  editBtn: {
-    minHeight: 48,
-    borderRadius: Spacing.three,
-    paddingHorizontal: Spacing.three,
+  statDivider: {
+    width: StyleSheet.hairlineWidth,
+    backgroundColor: LINE,
+    marginVertical: 4,
+  },
+  statValue: {
+    color: INK,
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 22,
+  },
+  statLabel: {
+    color: MUTED,
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 11,
+  },
+  sectionLabel: {
+    color: MUTED,
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 12,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    marginBottom: Spacing.two,
+  },
+  menu: {
+    backgroundColor: SURFACE,
+    borderRadius: CardRadius,
+    paddingHorizontal: 4,
+    marginBottom: Spacing.five,
+  },
+  menuRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+  },
+  menuRowBorder: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: LINE,
+  },
+  menuIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: SOFT,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  menuLabel: {
+    flex: 1,
+    color: INK,
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 15,
   },
   signOut: {
-    minHeight: 48,
-    borderRadius: Spacing.three,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    minHeight: 52,
+    borderRadius: CardRadius,
+    backgroundColor: SURFACE,
+    marginBottom: Spacing.three,
+  },
+  signOutText: {
+    color: DANGER,
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 14,
   },
 });
