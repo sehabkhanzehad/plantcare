@@ -9,7 +9,20 @@ import {
   Manrope_700Bold,
   Manrope_800ExtraBold,
 } from '@expo-google-fonts/manrope';
-import { Bell, CalendarDays, Check, Droplets, FlaskConical, Flame, Plus, ShoppingBag, Sparkles } from 'lucide-react-native';
+import {
+  Bell,
+  CalendarDays,
+  Check,
+  Droplets,
+  FlaskConical,
+  Flame,
+  HeartPulse,
+  Plus,
+  ShoppingBag,
+  Sparkles,
+  Sprout,
+  Thermometer,
+} from 'lucide-react-native';
 import Svg, { Circle } from 'react-native-svg';
 
 import { SectionHeader } from '@/components/ui/section-header';
@@ -190,6 +203,27 @@ export default function DashboardScreen() {
                 muted={theme.heroMuted}
               />
             </View>
+          </View>
+        </View>
+
+        <View style={[styles.overview, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <View style={styles.overviewHeader}>
+            <View>
+              <ThemedText style={styles.overviewTitle}>Garden overview</ThemedText>
+            </View>
+            <View style={[styles.overviewDot, { backgroundColor: theme.primary }]} />
+          </View>
+          <View style={[styles.overviewRow, { borderBottomColor: theme.border }]}>
+            <StatMetric icon={Thermometer} label="Temperature" value="24°C" iconColor="#C47E0A" theme={theme} />
+            <StatMetric icon={Droplets} label="Humidity" value="62%" iconColor="#2F6F8F" theme={theme} />
+            <StatMetric icon={Sprout} label="Total plants" value={String(plants.length)} iconColor={theme.primary} theme={theme} />
+            <StatMetric icon={HeartPulse} label="Garden health" value={`${health}%`} iconColor={theme.statusHealthy} theme={theme} />
+          </View>
+          <View style={styles.overviewRow}>
+            <StatMetric icon={CalendarDays} label="Due today" value={String(tasks.length)} iconColor={theme.statusAttention} theme={theme} />
+            <StatMetric icon={Flame} label="Care this week" value={String(weekTotal)} iconColor="#C47E0A" theme={theme} />
+            <StatMetric icon={ShoppingBag} label="Listings" value={String(activeListings)} iconColor={theme.primary} theme={theme} />
+            <StatMetric icon={Flame} label="Water streak" value={`${streak.current}d`} iconColor="#B96B16" theme={theme} />
           </View>
         </View>
 
@@ -384,6 +418,40 @@ function Pill({ text, accent, ink }: { text: string; accent: string; ink: string
   );
 }
 
+function StatMetric({
+  icon: Icon,
+  label,
+  value,
+  iconColor,
+  theme,
+}: {
+  icon: typeof Thermometer;
+  label: string;
+  value: string;
+  iconColor: string;
+  theme: ReturnType<typeof useTheme>;
+}) {
+  return (
+    <View
+      style={[
+        styles.statMetric,
+        { borderRightColor: theme.border },
+      ]}>
+      <View style={styles.statMetricInner}>
+        <View style={styles.statValueRow}>
+          <View style={[styles.statIcon, { backgroundColor: `${iconColor}18` }]}>
+            <Icon size={13} color={iconColor} strokeWidth={2} />
+          </View>
+          <ThemedText style={[styles.statValue, { color: theme.text }]}>{value}</ThemedText>
+        </View>
+        <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]} numberOfLines={1}>
+          {label}
+        </ThemedText>
+      </View>
+    </View>
+  );
+}
+
 function HealthRing({ score, accent, track }: { score: number; accent: string; track: string }) {
   const circumference = 2 * Math.PI * 48;
   return (
@@ -498,6 +566,40 @@ const styles = StyleSheet.create({
   heroHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   heroTitle: { color: '#FFFFFF', fontFamily: 'Manrope_600SemiBold', fontSize: 14 },
   heroContent: { flexDirection: 'row', alignItems: 'center', gap: 22 },
+  overview: {
+    borderRadius: CardRadius,
+    borderWidth: StyleSheet.hairlineWidth,
+    marginBottom: 22,
+    overflow: 'hidden',
+  },
+  overviewHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 11,
+  },
+  overviewTitle: { fontFamily: 'Manrope_700Bold', fontSize: 14 },
+  overviewDot: { width: 7, height: 7, borderRadius: 4 },
+  overviewRow: {
+    flexDirection: 'row',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  statMetric: {
+    width: '25%',
+    minHeight: 72,
+    borderRightWidth: StyleSheet.hairlineWidth,
+  },
+  statMetricInner: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    alignItems: 'flex-start',
+  },
+  statValueRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  statIcon: { width: 20, height: 20, borderRadius: 6, alignItems: 'center', justifyContent: 'center' },
+  statValue: { fontFamily: 'Manrope_800ExtraBold', fontSize: 14, lineHeight: 18 },
+  statLabel: { fontFamily: 'Manrope_600SemiBold', fontSize: 8, marginTop: 2 },
   pill: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },
   pillText: { fontFamily: 'Manrope_700Bold', fontSize: 10 },
   ring: { width: 112, height: 112, alignItems: 'center', justifyContent: 'center' },
