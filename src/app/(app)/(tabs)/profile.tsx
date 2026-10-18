@@ -4,17 +4,12 @@ import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import {
   Bell,
-  CalendarDays,
   Camera,
   ChevronRight,
-  Droplets,
-  Flame,
-  HeartPulse,
   LogOut,
   Package,
   Palette,
   ShoppingBag,
-  Sprout,
   Store,
   X,
 } from 'lucide-react-native';
@@ -31,7 +26,6 @@ import { Screen } from '@/components/ui/screen';
 import { useAppearanceOptional, type AppearanceMode } from '@/context/appearance';
 import { useCarePreferences } from '@/context/care-preferences';
 import { useSession } from '@/context/auth';
-import { useMarketplace } from '@/context/marketplace';
 import { usePlants } from '@/context/plants';
 import { CardRadius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -44,7 +38,6 @@ export default function ProfileScreen() {
   const theme = useTheme();
   const { user, signOut, updateProfile } = useSession();
   const { plants, careLogs } = usePlants();
-  const { listings } = useMarketplace();
   const appearance = useAppearanceOptional();
   const mode = appearance?.mode ?? 'system';
   const setMode = appearance?.setMode ?? (() => undefined);
@@ -61,19 +54,18 @@ export default function ProfileScreen() {
   const total = plants.length;
   const healthy = plants.filter((p) => p.status === 'Healthy').length;
   const attention = plants.filter((p) => p.status !== 'Healthy').length;
-  const health = total ? Math.round((healthy / total) * 100) : 0;
   const initial = (user?.name?.charAt(0) ?? 'P').toUpperCase();
   const modeLabel = mode === 'system' ? 'System' : mode === 'light' ? 'Light' : 'Dark';
 
-  const analytics = useMemo(() => {
+  const careStats = useMemo(() => {
     const today = dateKey(new Date());
+    const streak = wateringStreak(careLogs);
     return {
       dueToday: buildTodayTasks(plants, today).length,
       weekTotal: weeklyCareTotal(careLogs),
-      streak: wateringStreak(careLogs),
-      activeListings: listings.filter((l) => l.status === 'active').length,
+      streakDays: streak.current,
     };
-  }, [plants, careLogs, listings]);
+  }, [plants, careLogs]);
 
   async function pickAvatar() {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -148,28 +140,26 @@ export default function ProfileScreen() {
         </Pressable>
       </View>
 
-      <View style={[styles.stats, { backgroundColor: theme.surface }]}>
-        <Stat value={String(total)} label="Plants" />
-        <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
-        <Stat value={String(healthy)} label="Healthy" />
-        <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
-        <Stat value={String(attention)} label="Attention" />
-      </View>
-
-      <ThemedText style={[styles.sectionLabel, { color: theme.textSecondary }]}>Analytics</ThemedText>
-      <View style={[styles.analytics, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-        <View style={styles.metricGrid}>
-          <Metric icon={Sprout} label="Total plants" value={String(total)} color={theme.primary} theme={theme} />
-          <Metric icon={HeartPulse} label="Garden health" value={`${health}%`} color={theme.statusHealthy} theme={theme} />
-          <Metric icon={CalendarDays} label="Due today" value={String(analytics.dueToday)} color={theme.statusAttention} theme={theme} />
-          <Metric icon={Flame} label="Care this week" value={String(analytics.weekTotal)} color={theme.statusAttention} theme={theme} />
-          <Metric icon={ShoppingBag} label="Listings" value={String(analytics.activeListings)} color={theme.primary} theme={theme} />
-          <Metric icon={Droplets} label="Water streak" value={`${analytics.streak.current}d`} color="#2F6F8F" theme={theme} />
+      <View style={[styles.statsCard, theme.card]}>
+        <View style={styles.statsRow}>
+          <Stat value={String(total)} label="Plants" />
+          <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
+          <Stat value={String(healthy)} label="Healthy" />
+          <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
+          <Stat value={String(attention)} label="Attention" />
+        </View>
+        <View style={[styles.statsRowDivider, { backgroundColor: theme.border }]} />
+        <View style={styles.statsRow}>
+          <Stat value={String(careStats.dueToday)} label="Due today" />
+          <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
+          <Stat value={String(careStats.weekTotal)} label="This week" />
+          <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
+          <Stat value={`${careStats.streakDays}d`} label="Water streak" />
         </View>
       </View>
 
       <ThemedText style={[styles.sectionLabel, { color: theme.textSecondary }]}>Preferences</ThemedText>
-      <View style={[styles.menu, { backgroundColor: theme.surface }]}>
+      <View style={[styles.menu, theme.card]}>
         <SettingRow
           icon={Palette}
           label="Appearance"
@@ -186,7 +176,7 @@ export default function ProfileScreen() {
       </View>
 
       <ThemedText style={[styles.sectionLabel, { color: theme.textSecondary }]}>Shop</ThemedText>
-      <View style={[styles.menu, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+      <View style={[styles.menu, theme.card]}>
         <MenuRow
           icon={Store}
           label="My listings"
@@ -209,7 +199,7 @@ export default function ProfileScreen() {
         onPress={confirmSignOut}
         accessibilityRole="button"
         accessibilityLabel="Sign out"
-        style={[styles.signOut, { backgroundColor: theme.surface }]}>
+        style={[styles.signOut, theme.card]}>
         <LogOut size={16} color={theme.danger} strokeWidth={1.8} />
         <ThemedText style={[styles.signOutText, { color: theme.danger }]}>Sign out</ThemedText>
       </Pressable>
@@ -249,32 +239,6 @@ function Stat({ value, label }: { value: string; label: string }) {
     <View style={styles.stat}>
       <ThemedText style={[styles.statValue, { color: theme.text }]}>{value}</ThemedText>
       <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>{label}</ThemedText>
-    </View>
-  );
-}
-
-function Metric({
-  icon: Icon,
-  label,
-  value,
-  color,
-  theme,
-}: {
-  icon: typeof Store;
-  label: string;
-  value: string;
-  color: string;
-  theme: ReturnType<typeof useTheme>;
-}) {
-  return (
-    <View style={styles.metric}>
-      <View style={[styles.metricIcon, { backgroundColor: `${color}18` }]}>
-        <Icon size={14} color={color} strokeWidth={1.9} />
-      </View>
-      <ThemedText style={[styles.metricValue, { color: theme.text }]}>{value}</ThemedText>
-      <ThemedText style={[styles.metricLabel, { color: theme.textSecondary }]} numberOfLines={1}>
-        {label}
-      </ThemedText>
     </View>
   );
 }
@@ -510,11 +474,18 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 13,
   },
-  stats: {
-    flexDirection: 'row',
+  statsCard: {
     borderRadius: CardRadius,
     paddingVertical: 18,
     marginBottom: Spacing.five,
+    gap: 16,
+  },
+  statsRow: {
+    flexDirection: 'row',
+  },
+  statsRowDivider: {
+    height: StyleSheet.hairlineWidth,
+    marginHorizontal: Spacing.three,
   },
   stat: {
     flex: 1,
@@ -532,37 +503,6 @@ const styles = StyleSheet.create({
   statLabel: {
     fontFamily: 'Manrope_500Medium',
     fontSize: 11,
-  },
-  analytics: {
-    borderRadius: CardRadius,
-    borderWidth: StyleSheet.hairlineWidth,
-    padding: 18,
-    marginBottom: Spacing.five,
-  },
-  metricGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    rowGap: 18,
-  },
-  metric: {
-    width: '33.333%',
-    alignItems: 'center',
-    gap: 5,
-  },
-  metricIcon: {
-    width: 30,
-    height: 30,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  metricValue: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 15,
-  },
-  metricLabel: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 10,
   },
   sectionLabel: {
     fontFamily: 'Manrope_600SemiBold',

@@ -6,11 +6,11 @@ import {
   type TabListProps,
   type TabTriggerSlotProps,
 } from 'expo-router/ui';
-import { Pressable, StyleSheet, View, Platform } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { House, Leaf, MessagesSquare, Plus, UserRound, type LucideIcon } from 'lucide-react-native';
 
-import { CardRadius, Colors } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { CardRadius } from '@/constants/theme';
+import { useTheme, type AppTheme } from '@/hooks/use-theme';
 
 export default function AppTabs() {
   const colors = useTheme();
@@ -52,7 +52,7 @@ function TabButton({
   icon: LucideIcon;
   label: string;
   featured?: boolean;
-  colors: typeof Colors[keyof typeof Colors];
+  colors: AppTheme;
 }) {
   return (
     <Pressable
@@ -85,15 +85,7 @@ function CustomTabList({ style, children, ...props }: TabListProps) {
       <View
         style={[
           styles.bar,
-          { backgroundColor: colors.surface, borderColor: colors.border },
-          Platform.OS === 'ios' || Platform.OS === 'web'
-            ? {
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 8 },
-                shadowOpacity: 0.12,
-                shadowRadius: 20,
-              }
-            : {},
+          colors.scheme === 'dark' ? colors.cardElevated : colors.card,
         ]}
         pointerEvents="auto">
         {children}
@@ -120,11 +112,9 @@ const styles = StyleSheet.create({
     height: 64,
     paddingHorizontal: 10,
     borderRadius: CardRadius,
-    borderWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    elevation: 8,
   },
   tabButton: {
     width: 48,

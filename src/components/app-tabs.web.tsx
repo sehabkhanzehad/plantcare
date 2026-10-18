@@ -10,8 +10,8 @@ import { Pressable, View, StyleSheet, Platform } from 'react-native';
 
 import { House, Leaf, MessagesSquare, Plus, UserRound, type LucideIcon } from 'lucide-react-native';
 
-import { CardRadius, Colors, MaxContentWidth } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { CardRadius, MaxContentWidth } from '@/constants/theme';
+import { useTheme, type AppTheme } from '@/hooks/use-theme';
 
 export default function AppTabs() {
   const colors = useTheme();
@@ -53,7 +53,7 @@ export function TabButton({
   icon: LucideIcon;
   label: string;
   featured?: boolean;
-  colors: typeof Colors[keyof typeof Colors];
+  colors: AppTheme;
 }) {
   return (
     <Pressable
@@ -78,16 +78,19 @@ export function TabButton({
   );
 }
 
-export function CustomTabList({ style, children, colors, ...props }: TabListProps & { colors: typeof Colors[keyof typeof Colors] }) {
+export function CustomTabList({ style, children, colors, ...props }: TabListProps & { colors: AppTheme }) {
   return (
     <View {...props} style={[style, styles.tabListContainer]} pointerEvents="box-none">
       <View
         style={[
           styles.innerContainer,
-          { backgroundColor: colors.surface, borderColor: colors.border },
+          colors.scheme === 'dark' ? colors.cardElevated : colors.card,
           Platform.OS === 'web'
             ? {
-                boxShadow: '0 8px 20px rgba(0,0,0,0.12)',
+                boxShadow:
+                  colors.scheme === 'dark'
+                    ? '0 14px 40px rgba(0,0,0,0.62)'
+                    : '0 8px 20px rgba(0,0,0,0.12)',
               }
             : {},
         ]}

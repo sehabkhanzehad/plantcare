@@ -76,7 +76,7 @@ export default function CalendarScreen() {
           accessibilityLabel="Go back"
           onPress={() => router.back()}
           hitSlop={10}
-          style={[styles.backButton, { backgroundColor: theme.surface }]}>
+          style={[styles.backButton, theme.cardElevated]}>
           <ArrowLeft size={18} color={theme.text} strokeWidth={1.7} />
         </Pressable>
         <ThemedText style={[styles.topLabel, { color: theme.text }]}>Care</ThemedText>
@@ -100,7 +100,7 @@ export default function CalendarScreen() {
         </ThemedText>
       </View>
 
-      <View style={[styles.weekCard, { backgroundColor: theme.surface }]}>
+      <View style={[styles.weekCard, theme.card]}>
         <View style={styles.week}>
           {days.map((date) => {
             const key = dateKey(date);
@@ -126,13 +126,13 @@ export default function CalendarScreen() {
                 <View
                   style={[
                     styles.dayNumberWrap,
-                    active && { backgroundColor: theme.text, borderRadius: 999 },
+                    active && { backgroundColor: theme.primary, borderRadius: 999 },
                   ]}>
                   <ThemedText
                     style={[
                       styles.dayNumber,
                       { color: theme.text },
-                      active && { color: theme.accent },
+                      active && { color: theme.onPrimary },
                     ]}>
                     {date.getDate()}
                   </ThemedText>
@@ -141,7 +141,7 @@ export default function CalendarScreen() {
                   style={[
                     styles.dayDot,
                     dueCount > 0 ? { backgroundColor: theme.primary } : { backgroundColor: 'transparent' },
-                    active && dueCount > 0 && { backgroundColor: theme.accent },
+                    active && dueCount > 0 && { backgroundColor: theme.onPrimary },
                   ]}
                 />
               </Pressable>
@@ -158,7 +158,7 @@ export default function CalendarScreen() {
       </View>
 
       {schedule.length === 0 ? (
-        <View style={[styles.empty, { backgroundColor: theme.surface }]}>
+        <View style={[styles.empty, theme.card]}>
           <View style={[styles.emptyRule, { backgroundColor: theme.accent }]} />
           <ThemedText style={[styles.emptyTitle, { color: theme.text }]}>All clear</ThemedText>
           <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>
@@ -166,7 +166,7 @@ export default function CalendarScreen() {
           </ThemedText>
         </View>
       ) : (
-        <View style={[styles.list, { backgroundColor: theme.surface }]}>
+        <View style={[styles.list, theme.card]}>
           {schedule.map((item, index) => (
             <ScheduleRow
               key={`${item.plant.id}-${item.waterDue}-${item.fertilizeDue}`}

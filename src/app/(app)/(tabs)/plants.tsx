@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
 import { usePlants, type Plant } from '@/context/plants';
 import { CardRadius, Spacing } from '@/constants/theme';
+import { usePlantsUiPrefs } from '@/hooks/use-plants-ui-prefs';
 import { useTheme } from '@/hooks/use-theme';
 
 export default function PlantsScreen() {
@@ -19,7 +20,7 @@ export default function PlantsScreen() {
   const [editingId, setEditingId] = useState<string>();
   const [deletingId, setDeletingId] = useState<string>();
   const [query, setQuery] = useState('');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const { viewMode, setViewMode } = usePlantsUiPrefs();
   const [filter, setFilter] = useState<'All' | 'Healthy' | 'Needs Attention' | 'Overdue'>('All');
   const editingPlant = plants.find((plant) => plant.id === editingId);
   const deletingPlant = plants.find((plant) => plant.id === deletingId);
@@ -44,7 +45,7 @@ export default function PlantsScreen() {
             <ThemedText style={[styles.countText, { color: theme.primary }]}>{plants.length}</ThemedText>
           </View>
         </View>
-        <View style={[styles.searchBar, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        <View style={[styles.searchBar, theme.card]}>
           <Search size={19} color={theme.textSecondary} strokeWidth={1.8} />
           <TextInput
             value={query}
@@ -76,7 +77,7 @@ export default function PlantsScreen() {
               </Pressable>
             ))}
           </View>
-          <View style={[styles.viewToggle, { backgroundColor: theme.surface }]}>
+          <View style={[styles.viewToggle, theme.cardElevated]}>
             <Pressable onPress={() => setViewMode('grid')} accessibilityLabel="Grid view" style={[styles.viewButton, viewMode === 'grid' && { backgroundColor: theme.primary }]}>
               <Grid2X2 size={17} color={viewMode === 'grid' ? theme.onPrimary : theme.textSecondary} />
             </Pressable>

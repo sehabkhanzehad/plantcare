@@ -20,10 +20,7 @@ export function SurfaceCard({
     <View
       style={[
         styles.card,
-        {
-          backgroundColor: elevated ? theme.surfaceElevated : theme.surface,
-          borderColor: theme.border,
-        },
+        elevated ? theme.cardElevated : theme.card,
         padded && styles.padded,
         style,
       ]}
@@ -36,7 +33,6 @@ export function SurfaceCard({
 const styles = StyleSheet.create({
   card: {
     borderRadius: CardRadius,
-    borderWidth: StyleSheet.hairlineWidth,
   },
   padded: {
     padding: Spacing.three,

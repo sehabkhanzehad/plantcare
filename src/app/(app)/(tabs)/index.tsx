@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
@@ -26,9 +26,11 @@ import {
 import Svg, { Circle } from 'react-native-svg';
 
 import { SectionHeader } from '@/components/ui/section-header';
+import { useGardenEnvironment } from '@/context/garden-environment';
 import { useMarketplace } from '@/context/marketplace';
 import { useNotifications } from '@/context/notifications';
 import { usePlants } from '@/context/plants';
+import { useDashboardPrefs } from '@/hooks/use-dashboard-prefs';
 import { Screen } from '@/components/ui/screen';
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
@@ -53,16 +55,16 @@ export default function DashboardScreen() {
   const theme = useTheme();
   const isDark = useResolvedColorScheme() === 'dark';
   const { plants, careLogs, growthEntries, waterPlant, logCare } = usePlants();
+  const { environment } = useGardenEnvironment();
   const { listings } = useMarketplace();
   const { unreadCount } = useNotifications();
+  const { careChartRange: range, setCareChartRange: setRange } = useDashboardPrefs();
   const [fontsLoaded] = useFonts({
     Manrope_500Medium,
     Manrope_600SemiBold,
     Manrope_700Bold,
     Manrope_800ExtraBold,
   });
-  const [range, setRange] = useState<'week' | 'month'>('week');
-
   const today = dateKey(new Date());
   const tasks = useMemo(() => buildTodayTasks(plants, today), [plants, today]);
   const completedToday = useMemo(() => {
@@ -206,14 +208,14 @@ export default function DashboardScreen() {
             accessibilityLabel="Open calendar"
             hitSlop={12}
             onPress={() => router.push('/calendar')}
-            style={[styles.bell, { backgroundColor: theme.surface }]}>
+            style={[styles.bell, theme.cardElevated]}>
             <CalendarDays size={20} color={theme.text} strokeWidth={1.8} pointerEvents="none" />
           </Pressable>
           <Pressable
             accessibilityLabel="Open notifications"
             hitSlop={12}
             onPress={() => router.push('/notifications')}
-            style={[styles.bell, { backgroundColor: theme.surface }]}>
+            style={[styles.bell, theme.cardElevated]}>
             <Bell size={20} color={theme.text} strokeWidth={1.8} pointerEvents="none" />
             {unreadCount > 0 ? <View style={[styles.unread, { backgroundColor: theme.primary }]} pointerEvents="none" /> : null}
           </Pressable>
@@ -221,7 +223,7 @@ export default function DashboardScreen() {
       </View>
 
       {pausedCount > 0 ? (
-        <View style={[styles.pauseBanner, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        <View style={[styles.pauseBanner, theme.card]}>
           <ThemedText type="small" themeColor="textSecondary">
             {pausedCount} plant{pausedCount === 1 ? '' : 's'} on vacation pause
           </ThemedText>
@@ -236,8 +238,16 @@ export default function DashboardScreen() {
           style={[
             styles.hero,
             {
-              backgroundColor: isDark ? theme.surface : theme.heroBackground,
-              borderColor: isDark ? theme.border : 'rgba(255,255,255,0.12)',
+              backgroundColor: theme.heroBackground,
+              borderColor: isDark ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.12)',
+              ...(isDark
+                ? {
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 12 },
+                    shadowOpacity: 0.5,
+                    shadowRadius: 28,
+                  }
+                : {}),
             },
           ]}>
           <View style={styles.heroHeader}>
@@ -246,7 +256,7 @@ export default function DashboardScreen() {
               <Pill
                 text={`${weekDelta >= 0 ? '+' : ''}${weekDelta}% this week`}
                 accent={theme.accent}
-                ink={isDark ? theme.primary : theme.heroBackground}
+                ink={theme.heroBackground}
               />
             ) : null}
           </View>
@@ -269,9 +279,9 @@ export default function DashboardScreen() {
         </View>
 
         <View style={styles.envRow}>
-          <EnvCard icon={Thermometer} value="26°C" label="Indoor" theme={theme} />
-          <EnvCard icon={Droplets} value="68%" label="Humidity" theme={theme} />
-          <EnvCard icon={Sun} value="Low" label="Light" theme={theme} />
+          <EnvCard icon={Thermometer} value={environment.temperatureValue} label={environment.zoneLabel} theme={theme} />
+          <EnvCard icon={Droplets} value={environment.humidityValue} label="Humidity" theme={theme} />
+          <EnvCard icon={Sun} value={environment.lightLabel} label="Light" theme={theme} />
         </View>
 
         {activeListings > 0 ? (
@@ -279,7 +289,7 @@ export default function DashboardScreen() {
             <View style={[styles.divider, { backgroundColor: theme.border }]} />
             <Pressable
               onPress={() => router.push({ pathname: '/community', params: { segment: 'shop' } })}
-              style={[styles.shopCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+              style={[styles.shopCard, theme.card]}>
               <View style={[styles.shopIcon, { backgroundColor: `${theme.primary}18` }]}>
                 <ShoppingBag size={22} color={theme.primary} strokeWidth={1.8} />
               </View>
@@ -303,7 +313,7 @@ export default function DashboardScreen() {
           trailing={`${completedToday} of ${tasks.length} done`}
         />
         {tasks.length === 0 ? (
-          <View style={[styles.emptyTasks, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <View style={[styles.emptyTasks, theme.card]}>
             <ThemedText type="smallBold">All caught up</ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
               No watering or feeding due today.
@@ -318,12 +328,13 @@ export default function DashboardScreen() {
                 complete={isTaskDoneToday(task)}
                 onPress={() => completeTask(task)}
                 theme={theme}
+                isDark={isDark}
               />
             ))}
           </View>
         )}
 
-        <View style={[styles.analytics, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        <View style={[styles.analytics, theme.card]}>
           <View style={styles.analyticsTop}>
             <View>
               <ThemedText style={[styles.analyticsTitle, { color: theme.text }]}>
@@ -402,7 +413,7 @@ export default function DashboardScreen() {
         </View>
 
         {plants.length === 0 ? (
-          <View style={[styles.emptyGarden, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <View style={[styles.emptyGarden, theme.card]}>
             <ThemedText type="subtitle">Your garden is empty</ThemedText>
             <ThemedText type="small" themeColor="textSecondary" style={styles.emptyGardenText}>
               Add a plant to start tracking water, feed, and growth.
@@ -415,7 +426,7 @@ export default function DashboardScreen() {
               <Pressable
                 key={plant.id}
                 onPress={() => router.push({ pathname: '/plant/[id]', params: { id: plant.id } })}
-                style={[styles.plantCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+                style={[styles.plantCard, theme.card]}>
                 <Image
                   source={{ uri: plant.image || DEFAULT_PLANT_IMAGE }}
                   style={[styles.plantImage, { backgroundColor: theme.primaryMuted }]}
@@ -441,7 +452,7 @@ export default function DashboardScreen() {
             {plants.length < 3 ? (
               <Pressable
                 onPress={() => router.push('/add-plant')}
-                style={[styles.addPlantCard, { borderColor: theme.border, backgroundColor: theme.surface }]}>
+                style={[styles.addPlantCard, theme.card]}>
                 <Plus size={22} color={theme.primary} />
                 <ThemedText type="smallBold" themeColor="primary">Add</ThemedText>
               </Pressable>
@@ -454,7 +465,7 @@ export default function DashboardScreen() {
             onPress={() =>
               router.push({ pathname: '/plant/[id]', params: { id: growthPlant.id } })
             }
-            style={[styles.growthTeaser, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+            style={[styles.growthTeaser, theme.card]}>
             {recentGrowth.imageUri ? (
               <Image source={{ uri: recentGrowth.imageUri }} style={styles.growthThumb} />
             ) : null}
@@ -467,12 +478,20 @@ export default function DashboardScreen() {
           </Pressable>
         ) : null}
 
-        <View style={[styles.tip, { backgroundColor: theme.primaryMuted }]}>
-          <View style={[styles.tipIcon, { backgroundColor: theme.heroBackground }]}>
-            <Sparkles size={20} color={theme.accent} />
+        <View
+          style={[
+            styles.tip,
+            isDark ? theme.card : { backgroundColor: theme.primaryMuted },
+          ]}>
+          <View
+            style={[
+              styles.tipIcon,
+              { backgroundColor: isDark ? `${theme.primary}18` : theme.heroBackground },
+            ]}>
+            <Sparkles size={20} color={isDark ? theme.primary : theme.accent} />
           </View>
           <View style={styles.tipCopy}>
-            <ThemedText style={[styles.tipTitle, { color: theme.heroBackground }]}>{tip.title}</ThemedText>
+            <ThemedText style={[styles.tipTitle, { color: theme.text }]}>{tip.title}</ThemedText>
             <ThemedText style={[styles.tipText, { color: theme.textSecondary }]}>{tip.body}</ThemedText>
           </View>
         </View>
@@ -501,7 +520,7 @@ function EnvCard({
   theme: ReturnType<typeof useTheme>;
 }) {
   return (
-    <View style={[styles.envCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+    <View style={[styles.envCard, theme.card]}>
       <Icon size={19} color={theme.primary} strokeWidth={1.9} />
       <View style={styles.envCopy}>
         <ThemedText style={[styles.envValue, { color: theme.text }]} numberOfLines={1}>
@@ -559,15 +578,21 @@ function TaskRow({
   complete,
   onPress,
   theme,
+  isDark,
 }: {
   task: CareTask;
   complete: boolean;
   onPress: () => void;
   theme: ReturnType<typeof useTheme>;
+  isDark: boolean;
 }) {
   const Icon = task.kind === 'water' ? Droplets : FlaskConical;
-  const iconBg = task.kind === 'water' ? '#E3F0F5' : '#F7EEDB';
-  const iconColor = task.kind === 'water' ? '#2F6F8F' : '#8A6A12';
+  const iconBg = task.kind === 'water'
+    ? isDark ? '#152228' : '#E3F0F5'
+    : isDark ? '#1F1C14' : '#F7EEDB';
+  const iconColor = task.kind === 'water'
+    ? isDark ? '#6BA8C8' : '#2F6F8F'
+    : isDark ? '#C9A85A' : '#8A6A12';
 
   return (
     <Pressable
@@ -576,7 +601,7 @@ function TaskRow({
       onPress={onPress}
       style={[
         styles.task,
-        { backgroundColor: theme.surface, borderColor: theme.border },
+        theme.card,
         complete && styles.taskComplete,
       ]}>
       <View style={[styles.taskIcon, { backgroundColor: iconBg }]}>

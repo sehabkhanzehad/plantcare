@@ -17,19 +17,18 @@ import {
 import { CardRadius, Spacing } from '@/constants/theme';
 import { useCommunity } from '@/context/community';
 import { useBookmarkedPosts } from '@/hooks/use-bookmarked-posts';
+import { useExploreSegment, type ExploreSegment } from '@/hooks/use-explore-segment';
 import { useTheme } from '@/hooks/use-theme';
 
 type FilterCategory = 'All' | PostCategory;
 type ResolutionFilter = 'All' | 'Solved' | 'Open' | 'Saved';
-type ExploreSegment = 'community' | 'shop';
-
 export default function CommunityScreen() {
   const theme = useTheme();
   const { segment } = useLocalSearchParams<{ segment?: string }>();
   const { posts, comments } = useCommunity();
   const { ids: bookmarkedIds, toggleBookmark, isBookmarked } = useBookmarkedPosts();
-  const [userSegment, setUserSegment] = useState<ExploreSegment>('community');
-  const explore: ExploreSegment = segment === 'shop' ? 'shop' : userSegment;
+  const { segment: savedSegment, setSegment: setSavedSegment } = useExploreSegment();
+  const explore: ExploreSegment = segment === 'shop' ? 'shop' : savedSegment;
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<FilterCategory>('All');
   const [resolution, setResolution] = useState<ResolutionFilter>('All');
@@ -67,7 +66,7 @@ export default function CommunityScreen() {
             <Pressable
               key={item}
               onPress={() => {
-                setUserSegment(item);
+                setSavedSegment(item);
                 if (segment === 'shop' && item === 'community') {
                   router.setParams({ segment: '' });
                 }

@@ -16,10 +16,7 @@ export function ThemedView({ style, lightColor, darkColor, type, ...otherProps }
     <View
       style={[
         { backgroundColor: theme[type ?? 'background'] },
-        type === 'backgroundElement' && {
-          borderWidth: 1,
-          borderColor: theme.border,
-        },
+        type === 'backgroundElement' && theme.card,
         style,
       ]}
       {...otherProps}

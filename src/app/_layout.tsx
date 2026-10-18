@@ -9,6 +9,7 @@ import { SessionProvider, useSession } from '@/context/auth';
 import { CarePreferencesProvider } from '@/context/care-preferences';
 import { CommunityProvider } from '@/context/community';
 import { MarketplaceProvider } from '@/context/marketplace';
+import { GardenEnvironmentProvider } from '@/context/garden-environment';
 import { PlantsProvider } from '@/context/plants';
 import { NotificationsProvider } from '@/context/notifications';
 import { Colors } from '@/constants/theme';
@@ -19,15 +20,17 @@ export default function RootLayout() {
     <AppearanceProvider>
       <SessionProvider>
         <PlantsProvider>
-          <CarePreferencesProvider>
-            <CommunityProvider>
-              <MarketplaceProvider>
-                <NotificationsProvider>
-                  <AppShell />
-                </NotificationsProvider>
-              </MarketplaceProvider>
-            </CommunityProvider>
-          </CarePreferencesProvider>
+          <GardenEnvironmentProvider>
+            <CarePreferencesProvider>
+              <CommunityProvider>
+                <MarketplaceProvider>
+                  <NotificationsProvider>
+                    <AppShell />
+                  </NotificationsProvider>
+                </MarketplaceProvider>
+              </CommunityProvider>
+            </CarePreferencesProvider>
+          </GardenEnvironmentProvider>
         </PlantsProvider>
       </SessionProvider>
     </AppearanceProvider>
