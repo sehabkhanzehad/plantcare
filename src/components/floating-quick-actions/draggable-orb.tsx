@@ -1,13 +1,8 @@
 /* eslint-disable react-hooks/immutability -- Reanimated shared values are updated in gesture worklets */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { Dimensions, Pressable, StyleSheet } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, {
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from 'react-native-reanimated';
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { QuickActionArc, QuickHandleTab } from '@/components/floating-quick-actions/quick-action-arc';
@@ -25,10 +20,8 @@ import {
 export function DraggableOrb() {
   const insets = useSafeAreaInsets();
   const { menuOpen, toggleMenu, setMenuOpen, position, persistPosition } = useFloatingQuickActions();
-  const [dragPosition, setDragPosition] = useState<OrbPosition | null>(null);
 
   const windowW = useSharedValue(Dimensions.get('window').width);
-  const windowH = useSharedValue(Dimensions.get('window').height);
   const minY = useSharedValue(0);
   const maxY = useSharedValue(Dimensions.get('window').height);
   const minX = useSharedValue(0);
@@ -40,76 +33,103 @@ export function DraggableOrb() {
   const dragStartX = useSharedValue(0);
 
   const syncBounds = useCallback(() => {
-    const { width, height } = Dimensions.get('window');
+    const { width } = Dimensions.get('window');
     const bounds = computeHandleBounds({ top: insets.top, bottom: insets.bottom });
     windowW.value = width;
-    windowH.value = height;
     minY.value = bounds.minY;
     maxY.value = bounds.maxY;
     minX.value = bounds.minX;
     maxX.value = bounds.maxX;
-  }, [insets.bottom, insets.top, maxX, maxY, minX, minY, windowH, windowW]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- shared values are stable handles
+  }, [insets.bottom, insets.top]);
 
   useEffect(() => {
+    syncBounds();
     const sub = Dimensions.addEventListener('change', () => syncBounds());
     return () => sub.remove();
   }, [syncBounds]);
 
   useEffect(() => {
-    syncBounds();
     translateY.value = position.y - HANDLE_HEIGHT / 2;
     anchorX.value = position.x;
     anchorY.value = position.y;
-  }, [anchorX, anchorY, position.x, position.y, syncBounds, translateY]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- sync persisted position into shared values
+  }, [position.x, position.y]);
 
-  const active = dragPosition ?? position;
+  const closeMenuIfOpen = useCallback(() => {
+    setMenuOpen((open) => (open ? false : open));
+  }, [setMenuOpen]);
 
-  const closeMenu = () => setMenuOpen(false);
-  const finishDrag = (snapped: OrbPosition) => {
-    setDragPosition(null);
-    persistPosition(snapped);
-  };
-  const handleTap = () => toggleMenu();
-  const previewDrag = (pos: OrbPosition) => setDragPosition(pos);
+  const finishDrag = useCallback(
+    (snapped: OrbPosition) => {
+      persistPosition(snapped);
+    },
+    [persistPosition],
+  );
 
-  const pan = Gesture.Pan()
-    .minDistance(4)
-    .onBegin(() => {
-      dragStartY.value = anchorY.value;
-      dragStartX.value = anchorX.value;
-    })
-    .onStart(() => {
-      if (menuOpen) runOnJS(closeMenu)();
-    })
-    .onUpdate((e) => {
-      const nextY = Math.min(maxY.value, Math.max(minY.value, dragStartY.value + e.translationY));
-      const nextX = Math.min(maxX.value, Math.max(minX.value, dragStartX.value + e.translationX));
-      translateY.value = nextY - HANDLE_HEIGHT / 2;
-      runOnJS(previewDrag)({ x: nextX, y: nextY });
-    })
-    .onEnd((e) => {
-      const centerY = Math.min(
-        maxY.value,
-        Math.max(minY.value, dragStartY.value + e.translationY),
-      );
-      const centerX = Math.min(
-        maxX.value,
-        Math.max(minX.value, dragStartX.value + e.translationX),
-      );
-      const snappedX = snapHandleX(centerX, windowW.value);
-      const snapped = { x: snappedX, y: centerY };
-      translateY.value = withSpring(snapped.y - HANDLE_HEIGHT / 2, { damping: 18, stiffness: 220 });
-      runOnJS(finishDrag)(snapped);
-    });
+  const handleTap = useCallback(() => {
+    toggleMenu();
+  }, [toggleMenu]);
 
-  const tap = Gesture.Tap().onEnd(() => {
-    runOnJS(handleTap)();
-  });
+  const pan = useMemo(
+    () =>
+      Gesture.Pan()
+        .minDistance(6)
+        .onBegin(() => {
+          dragStartY.value = anchorY.value;
+          dragStartX.value = anchorX.value;
+        })
+        .onStart(() => {
+          runOnJS(closeMenuIfOpen)();
+        })
+        .onUpdate((e) => {
+          const nextY = Math.min(maxY.value, Math.max(minY.value, dragStartY.value + e.translationY));
+          translateY.value = nextY - HANDLE_HEIGHT / 2;
+        })
+        .onEnd((e) => {
+          const centerY = Math.min(
+            maxY.value,
+            Math.max(minY.value, dragStartY.value + e.translationY),
+          );
+          const centerX = Math.min(
+            maxX.value,
+            Math.max(minX.value, dragStartX.value + e.translationX),
+          );
+          const snappedX = snapHandleX(centerX, windowW.value);
+          const snapped = { x: snappedX, y: centerY };
+          anchorX.value = snappedX;
+          anchorY.value = centerY;
+          translateY.value = snapped.y - HANDLE_HEIGHT / 2;
+          runOnJS(finishDrag)(snapped);
+        }),
+    [
+      anchorX,
+      anchorY,
+      closeMenuIfOpen,
+      dragStartX,
+      dragStartY,
+      finishDrag,
+      maxX,
+      maxY,
+      minX,
+      minY,
+      translateY,
+      windowW,
+    ],
+  );
 
-  const gesture = Gesture.Exclusive(pan, tap);
+  const tap = useMemo(
+    () =>
+      Gesture.Tap().onEnd(() => {
+        runOnJS(handleTap)();
+      }),
+    [handleTap],
+  );
 
-  const dockRight = isDockedRight(active.x);
-  const anchor: OrbPosition = { x: active.x, y: active.y };
+  const gesture = useMemo(() => Gesture.Exclusive(pan, tap), [pan, tap]);
+
+  const dockRight = isDockedRight(position.x);
+  const anchor: OrbPosition = { x: position.x, y: position.y };
 
   const handleStyle = useAnimatedStyle(() => ({
     top: translateY.value,
