@@ -8,7 +8,7 @@ import {
 } from 'expo-router/ui';
 import { Pressable, View, StyleSheet, Platform } from 'react-native';
 
-import { House, Leaf, MessagesSquare, Plus, UserRound, type LucideIcon } from 'lucide-react-native';
+import { House, Leaf, MessagesSquare, Sparkles, UserRound, type LucideIcon } from 'lucide-react-native';
 
 import { CardRadius, MaxContentWidth } from '@/constants/theme';
 import { useTheme, type AppTheme } from '@/hooks/use-theme';
@@ -27,8 +27,8 @@ export default function AppTabs() {
           <TabTrigger name="plants" href="/plants" asChild>
             <TabButton icon={Leaf} label="Plants" colors={colors} />
           </TabTrigger>
-          <TabTrigger name="add-plant" href="/add-plant" asChild>
-            <TabButton icon={Plus} label="Add plant" featured colors={colors} />
+          <TabTrigger name="assistant" href="/assistant" asChild>
+            <TabButton icon={Sparkles} label="AI Assistant" colors={colors} featured />
           </TabTrigger>
           <TabTrigger name="community" href="/community" asChild>
             <TabButton icon={MessagesSquare} label="Community" colors={colors} />
@@ -55,6 +55,7 @@ export function TabButton({
   featured?: boolean;
   colors: AppTheme;
 }) {
+  const tint = featured ? colors.onPrimary : isFocused ? colors.primary : colors.textSecondary;
   return (
     <Pressable
       {...props}
@@ -65,11 +66,7 @@ export function TabButton({
           featured ? styles.featuredIcon : styles.iconWrap,
           featured && { backgroundColor: colors.primary },
         ]}>
-        <Icon
-          size={featured ? 20 : 21}
-          color={featured ? colors.onPrimary : isFocused ? colors.primary : colors.textSecondary}
-          strokeWidth={1.8}
-        />
+        <Icon size={featured ? 22 : 21} color={tint} strokeWidth={1.8} />
       </View>
       {isFocused && !featured ? (
         <View style={[styles.activeDot, { backgroundColor: colors.primary }]} />

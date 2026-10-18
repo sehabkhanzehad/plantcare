@@ -133,11 +133,6 @@ export default function ProfileScreen() {
             <ThemedText style={[styles.roleText, { color: theme.primary }]}>Store manager</ThemedText>
           </View>
         ) : null}
-        <Pressable onPress={pickAvatar} hitSlop={8}>
-          <ThemedText style={[styles.photoAction, { color: theme.primary }]}>
-            {user?.avatarUri ? 'Change photo' : 'Add profile photo'}
-          </ThemedText>
-        </Pressable>
       </View>
 
       <View style={[styles.statsCard, theme.card]}>
@@ -468,11 +463,6 @@ const styles = StyleSheet.create({
   roleText: {
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 11,
-  },
-  photoAction: {
-    marginTop: Spacing.three,
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 13,
   },
   statsCard: {
     borderRadius: CardRadius,
