@@ -1,56 +1,113 @@
-# Welcome to your Expo app 👋
+# PlantCare
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Expo (SDK 57) React Native app with Expo Router. Routes live under `src/app/`.
 
-## Get started
+## Local development
 
-1. Install dependencies
+1. Install dependencies:
 
    ```bash
    npm install
    ```
 
-2. Start the app
+2. Start the dev server:
 
    ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+3. Quality checks:
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+   ```bash
+   npx expo lint
+   npx tsc --noEmit
+   npx expo-doctor
+   ```
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## EAS Build (Android & iOS)
 
-## Get a fresh project
+This project is linked to EAS (`app.json` → `extra.eas.projectId`). Builds run in the cloud; you do not need Android Studio or Xcode on your machine for EAS builds.
 
-When you're ready, run:
+### One-time setup
+
+1. Create an [Expo account](https://expo.dev/signup) if you do not have one.
+
+2. Log in:
+
+   ```bash
+   npx eas-cli@latest login
+   ```
+
+3. Confirm the project (already configured if `eas.json` exists):
+
+   ```bash
+   npx eas-cli@latest whoami
+   ```
+
+**Apple (iOS):** Device builds need an [Apple Developer Program](https://developer.apple.com/programs/) membership. The first iOS build will prompt you to set up credentials (let EAS manage them unless you have a specific setup).
+
+**Android:** The first build will prompt for a keystore; choose **Let Expo generate a keystore** for testing.
+
+Before store release, change `com.anonymous.plantcare` in `app.json` (`ios.bundleIdentifier` and `android.package`) to your own identifier.
+
+### Build profiles
+
+| Profile       | Use case                         | Android output | iOS output      |
+|---------------|----------------------------------|----------------|-----------------|
+| `preview`     | Test APK / internal install      | `.apk`         | Device `.ipa`   |
+| `production`  | Play Store / App Store           | `.aab`         | Store `.ipa`    |
+| `development` | Dev client with native debugging | varies         | dev client      |
+
+### Commands to run
+
+**Preview — Android only (APK):**
 
 ```bash
-npm run reset-project
+npx eas-cli@latest build --platform android --profile preview
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+**Preview — iOS only (install on registered devices):**
 
-### Other setup steps
+```bash
+npx eas-cli@latest build --platform ios --profile preview
+```
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+**Preview — both platforms in one command:**
+
+```bash
+npx eas-cli@latest build --platform all --profile preview
+```
+
+**Production — both platforms (store-ready):**
+
+```bash
+npx eas-cli@latest build --platform all --profile production
+```
+
+**List recent builds and download links:**
+
+```bash
+npx eas-cli@latest build:list
+```
+
+When a build finishes, open the build URL from the terminal or go to [expo.dev](https://expo.dev) → your project → **Builds** → **Download**.
+
+### Install preview builds
+
+- **Android:** Copy the `.apk` to the phone and install (allow install from unknown sources if prompted).
+- **iOS:** Use the install link from EAS (internal distribution) or register device UDIDs for ad hoc builds per [Expo internal distribution](https://docs.expo.dev/build/internal-distribution/).
+
+### Submit to stores (after production build)
+
+```bash
+npx eas-cli@latest submit --platform android --profile production
+npx eas-cli@latest submit --platform ios --profile production
+```
+
+Configure store credentials when prompted. See [EAS Submit](https://docs.expo.dev/submit/introduction/).
 
 ## Learn more
 
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- [Expo documentation](https://docs.expo.dev/)
+- [EAS Build](https://docs.expo.dev/build/introduction/)
+- [Expo Router](https://docs.expo.dev/router/introduction/)

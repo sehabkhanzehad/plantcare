@@ -7,6 +7,13 @@
     "icon": "./assets/images/icon.png",
     "scheme": "plantcare",
     "userInterfaceStyle": "automatic",
+    "ios": {
+      "bundleIdentifier": "com.anonymous.plantcare",
+      "supportsTablet": true,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
     "android": {
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
@@ -53,6 +60,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "84f65e22-864a-4f98-ae78-fba88edfd3eb"
+      }
     }
   }
 }
